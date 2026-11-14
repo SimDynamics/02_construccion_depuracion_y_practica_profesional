@@ -94,7 +94,7 @@ set(powershell "$ENV{WINDIR}/System32/WindowsPowerShell/v1.0/powershell.exe")
 if(NOT EXISTS "${powershell}")
     error_preparacion("No se encontro Windows PowerShell en WINDIR.")
 endif()
-set(ruta_nul "${DIRECTORIO}/nul.txt")
+set(ruta_nul "${DIRECTORIO}/nulo_interno.txt")
 string(REPLACE "'" "''" ruta_nul_ps "${ruta_nul}")
 # Las comillas simples de la ruta se duplican para el literal de PowerShell.
 # GetBytes produce texto ASCII; [byte]0 es NUL y [byte]10 es LF.
@@ -241,7 +241,7 @@ probar("06_tab" 0
     "${DIRECTORIO}/tab.txt")
 probar("07_nul" 1
     "ACEPTADO linea=2 id=Despues tipo=sonido bytes=2\nRESUMEN lineas=2 aceptados=1 rechazados=1\n"
-    "RECHAZO linea=1 causa=FORMATO\n" "${DIRECTORIO}/nul.txt")
+    "RECHAZO linea=1 causa=FORMATO\n" "${DIRECTORIO}/nulo_interno.txt")
 probar("08_del127" 1
     "ACEPTADO linea=2 id=Despues tipo=sonido bytes=2\nRESUMEN lineas=2 aceptados=1 rechazados=1\n"
     "RECHAZO linea=1 causa=FORMATO\n" "${DIRECTORIO}/del127.txt")
