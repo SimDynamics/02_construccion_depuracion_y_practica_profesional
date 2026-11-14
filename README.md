@@ -45,14 +45,18 @@ Las funciones de salida preparan cadenas con formato decimal y configuración re
 
 Usa una consola de desarrollo x64 de Visual Studio basada en CMD, con MSVC, Windows SDK, CMake y Ninja disponibles en el mismo entorno. Ejecuta las órdenes desde la carpeta que contiene este README, donde están `01_prueba_cmake` y `AssetCheck`. Conviene una ruta corta para evitar que los nombres de los archivos generados superen los límites de las herramientas de Windows.
 
-Las bibliotecas de registro y lote declaran `cxx_std_20` como mínimo de modo de lenguaje; la nueva biblioteca del manifiesto declara `cxx_std_23`. Comunican esos requisitos a sus consumidores. Un mínimo permite un modo posterior. En la orden siguiente solicitamos C++23 mediante `CMAKE_CXX_STANDARD=23`; `CMAKE_CXX_STANDARD_REQUIRED=ON` evita que se sustituya esa petición por un estándar anterior. La nueva biblioteca y el cliente fijan también `CXX_STANDARD_REQUIRED ON`. Declarar un mínimo no garantiza por sí solo que el compilador implemente cada característica concreta del estándar.
+`AssetCheck/CMakeLists.txt` fija estos valores comunes antes de crear las bibliotecas y los programas, para que cada objetivo reciba esa configuración al crearse:
 
-Las fuentes fijan `CXX_EXTENSIONS OFF` para las tres bibliotecas y los tres programas. Esto solicita el modo sin extensiones propias del compilador cuando este distingue esos modos.
+- `CMAKE_CXX_STANDARD 23` solicita el modo de lenguaje C++23.
+- `CMAKE_CXX_STANDARD_REQUIRED ON` evita que se sustituya esa petición por un estándar anterior.
+- `CMAKE_CXX_EXTENSIONS OFF` solicita el modo sin extensiones propias del compilador cuando este distingue esos modos.
+
+Las tres bibliotecas declaran además `cxx_std_23` con alcance `PUBLIC`: comunican ese mínimo de modo de lenguaje a sus consumidores. Un mínimo permite un modo posterior y no garantiza por sí solo que el compilador implemente cada característica concreta del estándar. La orden de configuración siguiente utiliza los valores ya definidos en el proyecto.
 
 Ejecuta cada orden por separado y consulta inmediatamente su código. Las líneas `echo` muestran el código de la orden anterior: cero indica éxito. Si configuración o construcción devuelve otro valor, corrige el primer error antes de continuar; ejecutar un binario anterior no acredita la fuente actual. Si un comprobador o CTest devuelve un valor distinto de cero, revisa sus diagnósticos y vuelve a comprobar tras corregir la causa.
 
 ```cmd
-cmake -S AssetCheck -B AssetCheck/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=23 -DCMAKE_CXX_STANDARD_REQUIRED=ON
+cmake -S AssetCheck -B AssetCheck/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 echo CodigoConfiguracion=%ERRORLEVEL%
 cmake --build AssetCheck/build --target assetcheck comprobar_registro comprobar_lote
 echo CodigoConstruccion=%ERRORLEVEL%
@@ -70,7 +74,6 @@ La primera orden configura el proyecto y genera los archivos de construcción:
 - `-B AssetCheck/build` separa la caché y los archivos generados de las fuentes. Esa carpeta debe pertenecer a este proyecto; no reutilices una caché de otro árbol.
 - `-G Ninja` selecciona el generador Ninja.
 - `-DCMAKE_BUILD_TYPE=Debug` selecciona la configuración de depuración de este generador.
-- `-DCMAKE_CXX_STANDARD=23` y `-DCMAKE_CXX_STANDARD_REQUIRED=ON` solicitan el modo de lenguaje explicado arriba.
 
 La segunda orden construye los tres programas. `--build AssetCheck/build` selecciona el árbol generado; `--target assetcheck comprobar_registro comprobar_lote` indica el cliente y los dos comprobadores. CMake construye también sus dependencias: el cliente necesita la biblioteca del manifiesto, que enlaza con lote y registro. Las tres bibliotecas son estáticas y no se ejecutan por su cuenta. Después, las dos rutas terminadas en `.exe` ejecutan los comprobadores recién construidos.
 
