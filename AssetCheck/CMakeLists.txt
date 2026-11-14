@@ -29,3 +29,9 @@ target_compile_features(assetcheck_manifiesto PUBLIC cxx_std_23)
 set_target_properties(assetcheck_manifiesto PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF)
+
+add_executable(assetcheck src/cliente.cpp)
+target_link_libraries(assetcheck PRIVATE assetcheck_manifiesto)
+set_target_properties(assetcheck PROPERTIES
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF)

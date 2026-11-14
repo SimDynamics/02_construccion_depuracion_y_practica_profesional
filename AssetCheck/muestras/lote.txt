@@ -1,0 +1,8 @@
+Atlas textura 00012
+Pieza malla 30001
+Pieza malla 3
+Atlas textura 20
+atlas sonido 1
+_Eco sonido 2
+Eco sonido 2 extra
+Eco sonido 2
