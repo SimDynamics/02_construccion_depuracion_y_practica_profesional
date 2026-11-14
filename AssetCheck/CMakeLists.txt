@@ -21,3 +21,11 @@ add_executable(comprobar_lote pruebas/lote_casos.cpp)
 target_link_libraries(comprobar_lote PRIVATE assetcheck_lote)
 add_test(NAME comprobar_lote COMMAND comprobar_lote)
 set_target_properties(comprobar_lote PROPERTIES CXX_EXTENSIONS OFF)
+
+add_library(assetcheck_manifiesto STATIC src/manifiesto.cpp)
+target_include_directories(assetcheck_manifiesto PUBLIC include)
+target_link_libraries(assetcheck_manifiesto PUBLIC assetcheck_lote)
+target_compile_features(assetcheck_manifiesto PUBLIC cxx_std_23)
+set_target_properties(assetcheck_manifiesto PROPERTIES
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF)
