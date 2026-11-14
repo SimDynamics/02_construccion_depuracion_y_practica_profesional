@@ -31,3 +31,7 @@ add_test(NAME comprobar_registro COMMAND comprobar_registro)
 add_executable(comprobar_lote pruebas/lote_casos.cpp)
 target_link_libraries(comprobar_lote PRIVATE assetcheck_lote)
 add_test(NAME comprobar_lote COMMAND comprobar_lote)
+
+add_executable(comprobar_manifiesto pruebas/manifiesto_casos.cpp)
+target_link_libraries(comprobar_manifiesto PRIVATE assetcheck_manifiesto)
+add_test(NAME comprobar_manifiesto COMMAND comprobar_manifiesto)

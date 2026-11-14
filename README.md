@@ -21,7 +21,8 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/src/manifiesto.cpp`: lectura del flujo o archivo y construcción de las cadenas de salida.
 - `AssetCheck/src/cliente.cpp`: cliente de consola `assetcheck`.
 - `AssetCheck/muestras/lote.txt`: muestra curricular de ocho líneas, con sus bytes conservados.
-- `AssetCheck/CMakeLists.txt`: tres bibliotecas y tres programas: el cliente y los dos comprobadores. CTest registra sólo los dos comprobadores.
+- `AssetCheck/pruebas/manifiesto_casos.cpp`: comprobador del manifiesto, con archivos de prueba propios.
+- `AssetCheck/CMakeLists.txt`: tres bibliotecas y cuatro programas: el cliente y los tres comprobadores. CTest registra los tres comprobadores.
 - `.gitattributes`: regla que conserva los finales de línea de la muestra al usar Git.
 
 ## Interfaz de la biblioteca del manifiesto
@@ -58,12 +59,14 @@ Ejecuta cada orden por separado y consulta inmediatamente su código. Las línea
 ```cmd
 cmake -S AssetCheck -B AssetCheck/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 echo CodigoConfiguracion=%ERRORLEVEL%
-cmake --build AssetCheck/build --target assetcheck comprobar_registro comprobar_lote
+cmake --build AssetCheck/build --target assetcheck comprobar_registro comprobar_lote comprobar_manifiesto
 echo CodigoConstruccion=%ERRORLEVEL%
 AssetCheck\build\comprobar_registro.exe
 echo CodigoRegistro=%ERRORLEVEL%
 AssetCheck\build\comprobar_lote.exe
 echo CodigoLote=%ERRORLEVEL%
+AssetCheck\build\comprobar_manifiesto.exe "AssetCheck\build"
+echo CodigoManifiesto=%ERRORLEVEL%
 ctest --test-dir AssetCheck/build --output-on-failure
 echo CodigoCTest=%ERRORLEVEL%
 ```
@@ -75,11 +78,11 @@ La primera orden configura el proyecto y genera los archivos de construcción:
 - `-G Ninja` selecciona el generador Ninja.
 - `-DCMAKE_BUILD_TYPE=Debug` selecciona la configuración de depuración de este generador.
 
-La segunda orden construye los tres programas. `--build AssetCheck/build` selecciona el árbol generado; `--target assetcheck comprobar_registro comprobar_lote` indica el cliente y los dos comprobadores. CMake construye también sus dependencias: el cliente necesita la biblioteca del manifiesto, que enlaza con lote y registro. Las tres bibliotecas son estáticas y no se ejecutan por su cuenta. Después, las dos rutas terminadas en `.exe` ejecutan los comprobadores recién construidos.
+La segunda orden construye los cuatro programas. `--build AssetCheck/build` selecciona el árbol generado; `--target assetcheck comprobar_registro comprobar_lote comprobar_manifiesto` indica el cliente y los tres comprobadores. CMake construye también sus dependencias: el cliente y el comprobador del manifiesto necesitan la biblioteca del manifiesto, que enlaza con lote y registro. Las tres bibliotecas son estáticas y no se ejecutan por su cuenta. Después se ejecutan directamente los tres comprobadores; el último recibe la carpeta de construcción como directorio padre de sus archivos de prueba. CTest vuelve a ejecutar las tres baterías.
 
 ## Resultados esperados y regresión
 
-Ningún comprobador requiere entrada de consola: ambos utilizan datos y expectativas declarados en su código.
+Los tres comprobadores utilizan datos y expectativas declarados en su código, sin leer entrada de consola. El comprobador del manifiesto prepara además sus archivos de prueba dentro del directorio que se explica más abajo.
 
 `comprobar_registro.exe` debe escribir:
 
@@ -97,11 +100,30 @@ Comprobaciones=31 Fallos=0
 
 Sus treinta y un ensayos comparan el estado final completo: cantidad y orden de admisiones y rechazos, número de línea, los tres campos de cada registro y la causa y el primer origen de cada rechazo. Cada ensayo empieza con un lote nuevo y conserva ese lote durante todas sus líneas. Se incluyen el lote vacío, IDs únicos, duplicados inmediatos e intermedios, rechazos locales antes de una admisión, diferencias entre mayúsculas y minúsculas y dos lotes nuevos sucesivos. Las expectativas no se calculan llamando al lector que se está comprobando.
 
-Cada resumen termina con un salto de línea. Ambos programas deben dejar vacío el canal de error y terminar con código cero. Si el estado obtenido difiere del esperado, el comprobador del lote muestra el ensayo y ambos estados en el canal de error, acumula el fallo y termina con código uno. Se comparan datos conservados, no sólo conteos.
+Cada resumen termina con un salto de línea. Los comprobadores de registro y lote deben dejar vacío el canal de error y terminar con código cero. Si el estado obtenido difiere del esperado, el comprobador del lote muestra el ensayo y ambos estados en el canal de error, acumula el fallo y termina con código uno. Se comparan datos conservados, no sólo conteos.
 
-La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. CTest ejecuta los dos comprobadores registrados; `--output-on-failure` muestra la salida de una prueba si falla. Debe terminar con código cero y mostrar dos pruebas superadas. Las veintiocho y treinta y una comprobaciones internas no se registran individualmente en CTest.
+### Comprobador del manifiesto y sus archivos de prueba
 
-Volver a ejecutar los dos comprobadores después de un cambio permite detectar si se pierde un comportamiento ya ensayado; esa comprobación de regresión queda limitada a los datos y condiciones de las baterías de registro y lote. Esta entrega no incorpora un tercer comprobador registrado para la biblioteca del manifiesto: las pruebas focales de esa biblioteca se realizan por separado y no forman parte de CTest en este repositorio. Los resultados 28/31 y las dos pruebas de CTest no acreditan por sí solos la lectura física ni las salidas del cliente. La ejecución de la muestra siguiente comprueba ese recorrido concreto; la variante propia del estudiante requiere sus propias decisiones y pruebas.
+En la ruta normal, `comprobar_manifiesto.exe` realiza **54 comparaciones**. Contrasta el retorno, `ErrorGlobal` y el lote completo, incluidas cantidades, orden, campos y líneas de origen. También compara las cadenas enteras de informe, los diagnósticos y los códigos esperados. Sus entradas incluyen los límites de 80/81 bytes y 100/101 líneas, los terminadores, bytes inválidos, EOF con distintas máscaras, un fallo real de lectura tras un prefijo y una configuración regional artificial. Las expectativas se declaran independientemente del lector y de los serializadores.
+
+La ejecución directa de la receta pasa `"AssetCheck\build"` como directorio padre. Debe existir. El comprobador reserva allí un hijo nuevo, con un nombre como `manifiesto_casos_1`. Si ese directorio ya existe, lo conserva y prueba el siguiente número; no borra ni reutiliza los archivos de ejecuciones anteriores. Escribe únicamente sus archivos nuevos dentro de la carpeta reservada y comprueba los resultados de creación, escritura y cierre.
+
+La salida normal contiene dos líneas:
+
+```text
+DirectorioPruebas=<ruta del directorio nuevo>
+Comprobaciones=54 Fallos=0
+```
+
+La primera línea muestra la ruta real elegida: el directorio padre y el número disponible cambian entre equipos o ejecuciones. Los marcadores entre `<` y `>` de este ejemplo no se escriben literalmente. La segunda línea es el resumen esperado cuando pasan las 54 comparaciones. Ambas terminan con salto de línea.
+
+Para este comprobador, el código **0** indica comparaciones correctas y stderr vacío. El código **1** indica al menos una discrepancia, cuyos datos esperados y obtenidos aparecen en stderr. El código **2** indica uso incorrecto o un problema que impide completar la preparación o ejecución del comprobador, por ejemplo no poder escribir o cerrar su archivo. Las carpetas ya creadas se conservan también al fallar.
+
+Sin un argumento de directorio, el comprobador utiliza su carpeta de trabajo actual. CTest lo ejecuta sin argumentos desde el árbol de construcción: por eso la invocación de CTest que sigue a la ejecución directa reserva otra carpeta nueva dentro de `AssetCheck/build`. Repetir esa orden conserva ambas carpetas y reserva una más. Ninguna de estas pruebas depende de archivos privados de QA ni modifica la muestra publicada.
+
+La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. CTest ejecuta los tres comprobadores registrados; `--output-on-failure` muestra la salida de una prueba si falla. Debe terminar con código cero y mostrar tres pruebas superadas. Las 28, 31 y 54 comprobaciones internas pertenecen a sus respectivos programas y no se registran individualmente en CTest.
+
+Volver a ejecutar las tres baterías después de un cambio permite detectar si se pierde un comportamiento ya ensayado. Esa comprobación de regresión queda limitada a los datos y condiciones declarados: registro y lote en memoria, lectura del manifiesto, errores globales y preparación de las cadenas de informe. La ejecución de la muestra siguiente comprueba además el recorrido del cliente y sus canales; la variante propia del estudiante requiere sus propias decisiones y pruebas.
 
 ## Ejecutar el cliente con la muestra
 
