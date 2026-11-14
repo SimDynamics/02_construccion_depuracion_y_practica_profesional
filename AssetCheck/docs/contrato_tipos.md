@@ -1,10 +1,10 @@
-﻿# Contrato del resumen por tipo: implementación parcial
+﻿# Contrato del resumen por tipo: integración verificada en CI Windows
 
-**Estado: IMPLEMENTACIÓN PARCIAL.** Están creadas la interfaz `include/assetcheck/estadisticas.hpp` y las funciones `contar_tipos` y `salida_tipos` de `src/estadisticas.cpp`. Aún quedan pendientes su integración en CMake, el segundo cliente y sus pruebas. Las salidas siguientes conservan su carácter de expectativas independientes; no se presentan como una ejecución de `assetcheck_tipos`.
+**Estado: IMPLEMENTACIÓN INTEGRADA Y VALIDADA EN CI WINDOWS.** La biblioteca de estadísticas, `assetcheck_tipos`, las 22 comparaciones de unidad y los nueve escenarios de consola están publicados. [GitHub Actions comprobó seis suites CTest](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43654009027) con MSVC 19.44 en Windows Server 2022. Las salidas previstas se fijaron a partir del contrato antes de ejecutar el segundo cliente. Sigue pendiente la reproducción y captura en el Windows local del estudiante y la autoría de su propia variante.
 
 ## Proteger el cliente existente
 
-En revisiones completas, `assetcheck` conserva su interfaz publicada: filas `ACEPTADO` y `RESUMEN` en stdout, filas `RECHAZO` en stderr y código 0 sin rechazos o 1 con rechazos. Ante un error global conserva stdout vacío, un diagnóstico en stderr y código 2. Se conservan sus fuentes, bibliotecas, configuración de CMake y pruebas actuales. La nueva presentación corresponde al futuro cliente `assetcheck_tipos`, que reutilizará la misma decisión de lectura y validación.
+En revisiones completas, `assetcheck` conserva su interfaz publicada: filas `ACEPTADO` y `RESUMEN` en stdout, filas `RECHAZO` en stderr y código 0 sin rechazos o 1 con rechazos. Ante un error global conserva stdout vacío, un diagnóstico en stderr y código 2. Se conservan sus fuentes, bibliotecas, configuración de CMake y pruebas actuales. La nueva presentación corresponde al segundo cliente `assetcheck_tipos`, que reutiliza la misma decisión de lectura y validación.
 
 ## Interfaz y precondiciones de las funciones
 
@@ -12,7 +12,7 @@ En revisiones completas, `assetcheck` conserva su interfaz publicada: filas `ACE
 
 La precondición es que el lote proceda de las bibliotecas del contrato: hasta 100 líneas físicas y admisiones ya validadas, con tipos permitidos y tamaños entre 1 y 30000. Esta consulta no vuelve a leer ni validar el manifiesto.
 
-`salida_tipos(const Estadisticas& datos, const Lote& lote)` devuelve una cadena con TIPOS y RESUMEN. `datos` debe proceder de `contar_tipos(lote)` y ese mismo lote debe permanecer sin cambios entre ambas llamadas. Así los recuentos y los bytes corresponden a las admisiones que se resumen. La cadena se construye con configuración regional clásica y saltos lógicos finales. La función no imprime, no abre archivos ni decide sobre errores globales; esa decisión corresponde al cliente que se desarrollará después.
+`salida_tipos(const Estadisticas& datos, const Lote& lote)` devuelve una cadena con TIPOS y RESUMEN. `datos` debe proceder de `contar_tipos(lote)` y ese mismo lote debe permanecer sin cambios entre ambas llamadas. Así los recuentos y los bytes corresponden a las admisiones que se resumen. La cadena se construye con configuración regional clásica y saltos lógicos finales. La función no imprime, no abre archivos ni decide sobre errores globales; esa decisión corresponde al segundo cliente, sin alterar las responsabilidades de la biblioteca.
 
 ## Qué se contará
 
@@ -22,7 +22,7 @@ Los tamaños son declaraciones: este informe no comprueba que existan los recurs
 
 ## Formato y códigos previstos
 
-Tras una revisión completa, el cliente planificado escribirá exactamente dos filas en stdout, cada una con un salto de línea lógico al final:
+Tras una revisión completa, el segundo cliente escribe exactamente dos filas en stdout, cada una con un salto de línea lógico al final:
 
 ```text
 TIPOS textura=T malla=M sonido=S bytes_total=B
@@ -56,7 +56,7 @@ La línea 1 se rechaza por tamaño cero y no reserva `Faro`. Se admiten `Faro te
 
 Las cuatro admisiones dan una textura, una malla y dos sonidos. Su suma es 5 + 240 + 8 + 2 = 255; no se añaden los 7 bytes del duplicado. Estos valores se fijan a partir del contrato y no mediante una llamada a la futura implementación.
 
-stdout esperado de `assetcheck_tipos`, con un salto final tras cada fila:
+stdout del caso comprobado de `assetcheck_tipos`, con un salto final tras cada fila:
 
 ```text
 TIPOS textura=1 malla=1 sonido=2 bytes_total=255
@@ -76,4 +76,4 @@ Código esperado: **1**. Son cuatro admisiones y cuatro rechazos en una revisió
 
 ## Alcance de esta etapa
 
-La interfaz y las dos funciones están creadas como archivos fuente. La configuración de CMake continúa con las tres bibliotecas, cuatro programas y cuatro pruebas anteriores: todavía no incorpora estas fuentes ni construye `assetcheck_tipos`. La integración, el segundo cliente y sus comprobaciones se desarrollarán después de enseñar sus mecanismos. El cliente actual, sus bibliotecas y las tres muestras se conservan. Esta etapa parcial del autor no acredita una variante propia ni el dominio del estudiante.
+Las dos funciones de estadísticas y el segundo cliente están integrados en CMake junto a las bibliotecas anteriores. Se construyen cuatro bibliotecas y seis programas, y CTest registra seis suites. Se conservan el cliente original y sus 22 casos, las tres muestras con sus bytes exactos y las pruebas anteriores. La verificación automatizada de Windows Server 2022 no constituye una instalación desde cero en el equipo personal del estudiante ni acredita su variante propia. El siguiente trabajo corresponde a las acciones y capturas Windows reales que exige la lección, y a la práctica autónoma del estudiante.
