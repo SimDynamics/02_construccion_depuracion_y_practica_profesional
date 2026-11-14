@@ -1,10 +1,18 @@
-﻿# Contrato planificado: resumen de tipos admitidos
+﻿# Contrato del resumen por tipo: implementación parcial
 
-**Estado: PLANIFICADO. Todavía no implementado.** Esta etapa prepara datos y fija el comportamiento que se comprobará al desarrollar la ampliación. Las salidas siguientes son expectativas independientes; no se presentan como una ejecución de `assetcheck_tipos`.
+**Estado: IMPLEMENTACIÓN PARCIAL.** Están creadas la interfaz `include/assetcheck/estadisticas.hpp` y las funciones `contar_tipos` y `salida_tipos` de `src/estadisticas.cpp`. Aún quedan pendientes su integración en CMake, el segundo cliente y sus pruebas. Las salidas siguientes conservan su carácter de expectativas independientes; no se presentan como una ejecución de `assetcheck_tipos`.
 
 ## Proteger el cliente existente
 
 En revisiones completas, `assetcheck` conserva su interfaz publicada: filas `ACEPTADO` y `RESUMEN` en stdout, filas `RECHAZO` en stderr y código 0 sin rechazos o 1 con rechazos. Ante un error global conserva stdout vacío, un diagnóstico en stderr y código 2. Se conservan sus fuentes, bibliotecas, configuración de CMake y pruebas actuales. La nueva presentación corresponde al futuro cliente `assetcheck_tipos`, que reutilizará la misma decisión de lectura y validación.
+
+## Interfaz y precondiciones de las funciones
+
+`contar_tipos(const Lote& lote)` devuelve un objeto `Estadisticas` con `texturas`, `mallas`, `sonidos` y `bytes_total`. Los cuatro campos comienzan en cero en cada llamada. La función recorre sólo `lote.admitidos`: cada admisión aumenta el contador de su tipo exacto y aporta su tamaño una vez. La referencia evita copiar el lote; `const` impide modificarlo a través de ese parámetro.
+
+La precondición es que el lote proceda de las bibliotecas del contrato: hasta 100 líneas físicas y admisiones ya validadas, con tipos permitidos y tamaños entre 1 y 30000. Esta consulta no vuelve a leer ni validar el manifiesto.
+
+`salida_tipos(const Estadisticas& datos, const Lote& lote)` devuelve una cadena con TIPOS y RESUMEN. `datos` debe proceder de `contar_tipos(lote)` y ese mismo lote debe permanecer sin cambios entre ambas llamadas. Así los recuentos y los bytes corresponden a las admisiones que se resumen. La cadena se construye con configuración regional clásica y saltos lógicos finales. La función no imprime, no abre archivos ni decide sobre errores globales; esa decisión corresponde al cliente que se desarrollará después.
 
 ## Qué se contará
 
@@ -29,7 +37,7 @@ Una revisión completa sin rechazos devolverá 0; con rechazos locales, 1. Un er
 
 ## Muestra y expectativas independientes
 
-`muestras/variante.txt` contendrá estas ocho líneas, sin los números usados en la explicación curricular:
+`muestras/variante.txt` contiene estas ocho líneas, sin los números usados en la explicación curricular:
 
 ```text
 Faro textura 0
@@ -42,7 +50,7 @@ Eco sonido 2 extra
 Eco sonido 2
 ```
 
-El archivo tendrá 131 bytes ASCII, siete parejas CRLF, ningún BOM y ningún terminador tras la última línea. Su SHA-256 previsto es `a5f2ce648444ab349717abad2dd829e4c5f3f0afe249e06cf1af2ad8d26efd7c`. La regla `AssetCheck/muestras/variante.txt -text` de `.gitattributes` conservará sus bytes al usar Git.
+El archivo tiene 131 bytes ASCII, siete parejas CRLF, ningún BOM y ningún terminador tras la última línea. Su SHA-256 es `a5f2ce648444ab349717abad2dd829e4c5f3f0afe249e06cf1af2ad8d26efd7c`. La regla `AssetCheck/muestras/variante.txt -text` de `.gitattributes` conserva sus bytes al usar Git.
 
 La línea 1 se rechaza por tamaño cero y no reserva `Faro`. Se admiten `Faro textura 5` en la línea 2, `Puente malla 240` en la 3, `faro sonido 8` en la 5 y `Eco sonido 2` en la 8. La línea 4 es un duplicado cuyo primer origen es 2; las líneas 6 y 7 se rechazan por ID y FORMATO. La línea 8 debe procesarse aunque no termine en LF.
 
@@ -68,4 +76,4 @@ Código esperado: **1**. Son cuatro admisiones y cuatro rechazos en una revisió
 
 ## Alcance de esta etapa
 
-Sólo se preparan datos, reglas de conservación y este contrato. No se añade todavía una biblioteca de estadísticas, un segundo ejecutable, una prueba de CTest ni automatización de publicación. La implementación y sus pruebas se desarrollarán después de enseñar sus mecanismos. Este contrato del autor no acredita una variante propia ni el dominio del estudiante.
+La interfaz y las dos funciones están creadas como archivos fuente. La configuración de CMake continúa con las tres bibliotecas, cuatro programas y cuatro pruebas anteriores: todavía no incorpora estas fuentes ni construye `assetcheck_tipos`. La integración, el segundo cliente y sus comprobaciones se desarrollarán después de enseñar sus mecanismos. El cliente actual, sus bibliotecas y las tres muestras se conservan. Esta etapa parcial del autor no acredita una variante propia ni el dominio del estudiante.

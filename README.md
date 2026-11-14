@@ -19,16 +19,20 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/pruebas/lote_casos.cpp`: comprobador del estado completo del lote.
 - `AssetCheck/include/assetcheck/manifiesto.hpp`: interfaz pública de la revisión completa y de la preparación del informe.
 - `AssetCheck/src/manifiesto.cpp`: lectura del flujo o archivo y construcción de las cadenas de salida.
+- `AssetCheck/include/assetcheck/estadisticas.hpp`: interfaz de la consulta de tipos, en etapa parcial.
+- `AssetCheck/src/estadisticas.cpp`: cálculo de tipos y texto TIPOS/RESUMEN; fuentes pendientes de integración en CMake y de un segundo cliente.
 - `AssetCheck/src/cliente.cpp`: cliente de consola `assetcheck`.
 - `AssetCheck/muestras/lote.txt`: muestra curricular de ocho líneas, con sus bytes conservados.
 - `AssetCheck/muestras/variacion_lector.txt`: muestra de seis líneas para el ensayo parcial del lector, con 94 bytes conservados.
 - `AssetCheck/muestras/variante.txt`: tercera muestra, con ocho líneas y expectativas para el contrato planificado de tipos.
 - `AssetCheck/docs/variacion_lector.md`: expectativas, resultado observado y receta de captura del ensayo parcial del autor.
-- [AssetCheck/docs/contrato_tipos.md](AssetCheck/docs/contrato_tipos.md): contrato PLANIFICADO del resumen por tipo; todavía sin implementación.
+- [AssetCheck/docs/contrato_tipos.md](AssetCheck/docs/contrato_tipos.md): contrato de la etapa parcial, con funciones creadas y segundo cliente pendiente.
 - `AssetCheck/pruebas/manifiesto_casos.cpp`: comprobador del manifiesto, con archivos de prueba propios.
 - `AssetCheck/pruebas/cliente_casos.cmake`: guion que ejecuta el cliente y compara su código y sus dos canales.
 - `AssetCheck/CMakeLists.txt`: tres bibliotecas y cuatro programas: el cliente y los tres comprobadores. CTest registra cuatro pruebas: los tres comprobadores y el guion del cliente.
 - `.gitattributes`: reglas que conservan los finales de línea de las tres muestras al usar Git.
+
+La ampliación por tipos tiene cabecera y funciones de consulta, pero aún no está integrada en CMake ni dispone del segundo cliente. La receta de construcción siguiente sigue construyendo las tres bibliotecas y los cuatro programas anteriores.
 
 ## Interfaz de la biblioteca del manifiesto
 
