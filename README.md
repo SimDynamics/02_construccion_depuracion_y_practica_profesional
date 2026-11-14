@@ -22,11 +22,13 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/src/cliente.cpp`: cliente de consola `assetcheck`.
 - `AssetCheck/muestras/lote.txt`: muestra curricular de ocho líneas, con sus bytes conservados.
 - `AssetCheck/muestras/variacion_lector.txt`: muestra de seis líneas para el ensayo parcial del lector, con 94 bytes conservados.
+- `AssetCheck/muestras/variante.txt`: tercera muestra, con ocho líneas y expectativas para el contrato planificado de tipos.
 - `AssetCheck/docs/variacion_lector.md`: expectativas, resultado observado y receta de captura del ensayo parcial del autor.
+- [AssetCheck/docs/contrato_tipos.md](AssetCheck/docs/contrato_tipos.md): contrato PLANIFICADO del resumen por tipo; todavía sin implementación.
 - `AssetCheck/pruebas/manifiesto_casos.cpp`: comprobador del manifiesto, con archivos de prueba propios.
 - `AssetCheck/pruebas/cliente_casos.cmake`: guion que ejecuta el cliente y compara su código y sus dos canales.
 - `AssetCheck/CMakeLists.txt`: tres bibliotecas y cuatro programas: el cliente y los tres comprobadores. CTest registra cuatro pruebas: los tres comprobadores y el guion del cliente.
-- `.gitattributes`: reglas que conservan los finales de línea de las dos muestras al usar Git.
+- `.gitattributes`: reglas que conservan los finales de línea de las tres muestras al usar Git.
 
 ## Interfaz de la biblioteca del manifiesto
 

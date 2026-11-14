@@ -1,0 +1,8 @@
+Faro textura 0
+Faro textura 00005
+Puente malla 240
+Faro sonido 7
+faro sonido 8
+_Eco sonido 2
+Eco sonido 2 extra
+Eco sonido 2
