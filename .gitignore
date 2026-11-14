@@ -1,0 +1,5 @@
+/01_prueba_cmake/build/
+/01_prueba_cmake/build-*/
+/AssetCheck/build/
+/AssetCheck/build-*/
+**/.vs/

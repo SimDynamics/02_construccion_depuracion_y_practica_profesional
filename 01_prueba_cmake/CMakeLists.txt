@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(PreparacionAssetCheck LANGUAGES CXX)
+add_executable(preparar_entorno main.cpp)
+target_compile_features(preparar_entorno PRIVATE cxx_std_20)
+set_target_properties(preparar_entorno PROPERTIES CXX_EXTENSIONS OFF)
