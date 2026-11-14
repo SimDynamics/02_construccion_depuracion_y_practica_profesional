@@ -3,3 +3,21 @@
 /AssetCheck/build/
 /AssetCheck/build-*/
 **/.vs/
+
+# Salidas locales, configuraciones personales y dependencias generadas.
+**/out/
+**/bin/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/CMakeUserPresets.json
+*.exe
+*.dll
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.suo
+*.user
+*.env
+.env.*
+!**/.env.example
