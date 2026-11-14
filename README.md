@@ -21,10 +21,12 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/src/manifiesto.cpp`: lectura del flujo o archivo y construcción de las cadenas de salida.
 - `AssetCheck/src/cliente.cpp`: cliente de consola `assetcheck`.
 - `AssetCheck/muestras/lote.txt`: muestra curricular de ocho líneas, con sus bytes conservados.
+- `AssetCheck/muestras/variacion_lector.txt`: muestra de seis líneas para el ensayo parcial del lector, con 94 bytes conservados.
+- `AssetCheck/docs/variacion_lector.md`: expectativas, resultado observado y receta de captura del ensayo parcial del autor.
 - `AssetCheck/pruebas/manifiesto_casos.cpp`: comprobador del manifiesto, con archivos de prueba propios.
 - `AssetCheck/pruebas/cliente_casos.cmake`: guion que ejecuta el cliente y compara su código y sus dos canales.
 - `AssetCheck/CMakeLists.txt`: tres bibliotecas y cuatro programas: el cliente y los tres comprobadores. CTest registra cuatro pruebas: los tres comprobadores y el guion del cliente.
-- `.gitattributes`: regla que conserva los finales de línea de la muestra al usar Git.
+- `.gitattributes`: reglas que conservan los finales de línea de las dos muestras al usar Git.
 
 ## Interfaz de la biblioteca del manifiesto
 
@@ -225,5 +227,7 @@ Cada fila de salida termina con salto de línea, incluida la última. Los dos ca
 Una revisión completa sin rechazos devuelve **0**. Un error global de apertura, lectura o límite de líneas devuelve **2**, deja stdout vacío y presenta una única línea de diagnóstico global en stderr. No publica un informe parcial ni otro informe anterior.
 
 El contrato del cliente exige exactamente una ruta además del nombre del programa: `argc` debe valer 2. Cuando falta esa ruta o se proporcionan argumentos adicionales, este cliente escribe `ERROR causa=APERTURA` y devuelve **2** antes de intentar abrir un archivo. Esa etiqueta para la cantidad incorrecta de argumentos es una decisión de esta interfaz; no demuestra que se haya intentado abrir una ruta.
+
+El [ensayo parcial con seis líneas](AssetCheck/docs/variacion_lector.md) documenta otra entrada y conserva sus expectativas y resultados. Sus órdenes usan Windows PowerShell 5.1 desde **AssetCheck**; las recetas de construcción de este README usan CMD desde la **raíz del repositorio**.
 
 Los árboles `build` contienen archivos generados y permanecen fuera de la publicación. Las fuentes de la prueba mínima se conservan como preparación anterior del entorno.
