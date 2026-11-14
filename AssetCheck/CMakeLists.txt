@@ -9,3 +9,15 @@ target_link_libraries(comprobar_registro PRIVATE assetcheck_registro)
 set_target_properties(comprobar_registro PROPERTIES CXX_EXTENSIONS OFF)
 enable_testing()
 add_test(NAME comprobar_registro COMMAND comprobar_registro)
+
+# Añadir después de definir assetcheck_registro.
+add_library(assetcheck_lote STATIC src/lote.cpp)
+target_include_directories(assetcheck_lote PUBLIC include)
+target_link_libraries(assetcheck_lote PUBLIC assetcheck_registro)
+target_compile_features(assetcheck_lote PUBLIC cxx_std_20)
+set_target_properties(assetcheck_lote PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(comprobar_lote pruebas/lote_casos.cpp)
+target_link_libraries(comprobar_lote PRIVATE assetcheck_lote)
+add_test(NAME comprobar_lote COMMAND comprobar_lote)
+set_target_properties(comprobar_lote PROPERTIES CXX_EXTENSIONS OFF)
