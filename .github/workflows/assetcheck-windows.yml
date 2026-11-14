@@ -1,0 +1,25 @@
+name: Verificar AssetCheck Windows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'AssetCheck/**'
+      - '.github/workflows/assetcheck-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  comprobar:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar Visual Studio C++ x64
+        run: cmake -S AssetCheck -B AssetCheck/build -G "Visual Studio 17 2022" -A x64
+      - name: Construir objetivos y pruebas
+        run: cmake --build AssetCheck/build --config Debug --parallel 2
+      - name: Ejecutar seis suites CTest sin modificar las muestras
+        run: ctest --test-dir AssetCheck/build -C Debug --output-on-failure

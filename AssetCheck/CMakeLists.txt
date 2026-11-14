@@ -41,3 +41,23 @@ add_test(NAME comprobar_cliente
         "-DCLIENTE=$<TARGET_FILE:assetcheck>"
         "-DRAIZ_PRUEBAS=${CMAKE_CURRENT_BINARY_DIR}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/pruebas/cliente_casos.cmake")
+
+# Estadisticas y segundo consumidor, sin alterar el cliente original.
+add_library(assetcheck_estadisticas STATIC src/estadisticas.cpp)
+target_include_directories(assetcheck_estadisticas PUBLIC include)
+target_link_libraries(assetcheck_estadisticas PUBLIC assetcheck_lote)
+target_compile_features(assetcheck_estadisticas PUBLIC cxx_std_23)
+
+add_executable(assetcheck_tipos src/cliente_tipos.cpp)
+target_link_libraries(assetcheck_tipos PRIVATE
+    assetcheck_estadisticas assetcheck_manifiesto)
+
+add_executable(comprobar_estadisticas pruebas/estadisticas_casos.cpp)
+target_link_libraries(comprobar_estadisticas PRIVATE assetcheck_estadisticas)
+add_test(NAME comprobar_estadisticas COMMAND comprobar_estadisticas)
+
+add_test(NAME comprobar_tipos_cli
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLIENTE=$<TARGET_FILE:assetcheck_tipos>"
+        "-DDIR=${CMAKE_CURRENT_BINARY_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/pruebas/comprobar_tipos_cli.cmake")
