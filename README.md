@@ -22,7 +22,8 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/src/cliente.cpp`: cliente de consola `assetcheck`.
 - `AssetCheck/muestras/lote.txt`: muestra curricular de ocho líneas, con sus bytes conservados.
 - `AssetCheck/pruebas/manifiesto_casos.cpp`: comprobador del manifiesto, con archivos de prueba propios.
-- `AssetCheck/CMakeLists.txt`: tres bibliotecas y cuatro programas: el cliente y los tres comprobadores. CTest registra los tres comprobadores.
+- `AssetCheck/pruebas/cliente_casos.cmake`: guion que ejecuta el cliente y compara su código y sus dos canales.
+- `AssetCheck/CMakeLists.txt`: tres bibliotecas y cuatro programas: el cliente y los tres comprobadores. CTest registra cuatro pruebas: los tres comprobadores y el guion del cliente.
 - `.gitattributes`: regla que conserva los finales de línea de la muestra al usar Git.
 
 ## Interfaz de la biblioteca del manifiesto
@@ -46,6 +47,8 @@ Las funciones de salida preparan cadenas con formato decimal y configuración re
 
 Usa una consola de desarrollo x64 de Visual Studio basada en CMD, con MSVC, Windows SDK, CMake y Ninja disponibles en el mismo entorno. Ejecuta las órdenes desde la carpeta que contiene este README, donde están `01_prueba_cmake` y `AssetCheck`. Conviene una ruta corta para evitar que los nombres de los archivos generados superen los límites de las herramientas de Windows.
 
+El guion del cliente necesita además Windows PowerShell 5.1. Utiliza el ejecutable del sistema situado en `%WINDIR%\System32\WindowsPowerShell\v1.0\powershell.exe`, donde `%WINDIR%` es la carpeta de Windows del equipo; el propio guion comprueba que exista. Se usa para escribir todos los archivos de entrada mediante `WriteAllBytes` y conservar sus bytes exactos, incluidos LF, CRLF y NUL. No depende de herramientas guardadas en datos privados de QA ni de otro runtime. La llamada usa `-NoProfile -NonInteractive -Command`: omite los perfiles, no solicita interacción y ejecuta las instrucciones indicadas sin crear un `.ps1` ni cambiar la política de ejecución.
+
 `AssetCheck/CMakeLists.txt` fija estos valores comunes antes de crear las bibliotecas y los programas, para que cada objetivo reciba esa configuración al crearse:
 
 - `CMAKE_CXX_STANDARD 23` solicita el modo de lenguaje C++23.
@@ -67,6 +70,8 @@ AssetCheck\build\comprobar_lote.exe
 echo CodigoLote=%ERRORLEVEL%
 AssetCheck\build\comprobar_manifiesto.exe "AssetCheck\build"
 echo CodigoManifiesto=%ERRORLEVEL%
+cmake "-DCLIENTE=%CD%\AssetCheck\build\assetcheck.exe" "-DRAIZ_PRUEBAS=%CD%\AssetCheck\build" -P AssetCheck/pruebas/cliente_casos.cmake
+echo CodigoPruebasCliente=%ERRORLEVEL%
 ctest --test-dir AssetCheck/build --output-on-failure
 echo CodigoCTest=%ERRORLEVEL%
 ```
@@ -78,7 +83,7 @@ La primera orden configura el proyecto y genera los archivos de construcción:
 - `-G Ninja` selecciona el generador Ninja.
 - `-DCMAKE_BUILD_TYPE=Debug` selecciona la configuración de depuración de este generador.
 
-La segunda orden construye los cuatro programas. `--build AssetCheck/build` selecciona el árbol generado; `--target assetcheck comprobar_registro comprobar_lote comprobar_manifiesto` indica el cliente y los tres comprobadores. CMake construye también sus dependencias: el cliente y el comprobador del manifiesto necesitan la biblioteca del manifiesto, que enlaza con lote y registro. Las tres bibliotecas son estáticas y no se ejecutan por su cuenta. Después se ejecutan directamente los tres comprobadores; el último recibe la carpeta de construcción como directorio padre de sus archivos de prueba. CTest vuelve a ejecutar las tres baterías.
+La segunda orden construye los cuatro programas. `--build AssetCheck/build` selecciona el árbol generado; `--target assetcheck comprobar_registro comprobar_lote comprobar_manifiesto` indica el cliente y los tres comprobadores. CMake construye también sus dependencias: el cliente y el comprobador del manifiesto necesitan la biblioteca del manifiesto, que enlaza con lote y registro. Las tres bibliotecas son estáticas y no se ejecutan por su cuenta. Después se ejecutan directamente los tres comprobadores; el último recibe la carpeta de construcción como directorio padre de sus archivos de prueba. La orden siguiente ejecuta el guion de CMake que comprueba el cliente. Por último, CTest vuelve a ejecutar las tres baterías y el guion: son cuatro pruebas registradas, aunque siguen existiendo cuatro programas.
 
 ## Resultados esperados y regresión
 
@@ -104,7 +109,7 @@ Cada resumen termina con un salto de línea. Los comprobadores de registro y lot
 
 ### Comprobador del manifiesto y sus archivos de prueba
 
-En la ruta normal, `comprobar_manifiesto.exe` realiza **54 comparaciones**. Contrasta el retorno, `ErrorGlobal` y el lote completo, incluidas cantidades, orden, campos y líneas de origen. También compara las cadenas enteras de informe, los diagnósticos y los códigos esperados. Sus entradas incluyen los límites de 80/81 bytes y 100/101 líneas, los terminadores, bytes inválidos, EOF con distintas máscaras, un fallo real de lectura tras un prefijo y una configuración regional artificial. Las expectativas se declaran independientemente del lector y de los serializadores.
+En la ruta normal, `comprobar_manifiesto.exe` realiza **56 comparaciones**. Contrasta el retorno, `ErrorGlobal` y el lote completo, incluidas cantidades, orden, campos y líneas de origen. También compara las cadenas enteras de informe, los diagnósticos y los códigos esperados. Sus entradas incluyen los límites de 80/81 bytes y 100/101 líneas, los terminadores, bytes inválidos, EOF con distintas máscaras, un fallo real de lectura tras un prefijo y una configuración regional artificial. Bajo esa configuración, también comprueba que `30000` siga siendo un tamaño válido y que `1_2` sea rechazado como `TAMANO`: el separador regional artificial no forma parte de los dígitos admitidos. Las expectativas se declaran independientemente del lector y de los serializadores.
 
 La ejecución directa de la receta pasa `"AssetCheck\build"` como directorio padre. Debe existir. El comprobador reserva allí un hijo nuevo, con un nombre como `manifiesto_casos_1`. Si ese directorio ya existe, lo conserva y prueba el siguiente número; no borra ni reutiliza los archivos de ejecuciones anteriores. Escribe únicamente sus archivos nuevos dentro de la carpeta reservada y comprueba los resultados de creación, escritura y cierre.
 
@@ -112,18 +117,63 @@ La salida normal contiene dos líneas:
 
 ```text
 DirectorioPruebas=<ruta del directorio nuevo>
-Comprobaciones=54 Fallos=0
+Comprobaciones=56 Fallos=0
 ```
 
-La primera línea muestra la ruta real elegida: el directorio padre y el número disponible cambian entre equipos o ejecuciones. Los marcadores entre `<` y `>` de este ejemplo no se escriben literalmente. La segunda línea es el resumen esperado cuando pasan las 54 comparaciones. Ambas terminan con salto de línea.
+La primera línea muestra la ruta real elegida: el directorio padre y el número disponible cambian entre equipos o ejecuciones. Los marcadores entre `<` y `>` de este ejemplo no se escriben literalmente. La segunda línea es el resumen esperado cuando pasan las 56 comparaciones. Ambas terminan con salto de línea.
 
 Para este comprobador, el código **0** indica comparaciones correctas y stderr vacío. El código **1** indica al menos una discrepancia, cuyos datos esperados y obtenidos aparecen en stderr. El código **2** indica uso incorrecto o un problema que impide completar la preparación o ejecución del comprobador, por ejemplo no poder escribir o cerrar su archivo. Las carpetas ya creadas se conservan también al fallar.
 
 Sin un argumento de directorio, el comprobador utiliza su carpeta de trabajo actual. CTest lo ejecuta sin argumentos desde el árbol de construcción: por eso la invocación de CTest que sigue a la ejecución directa reserva otra carpeta nueva dentro de `AssetCheck/build`. Repetir esa orden conserva ambas carpetas y reserva una más. Ninguna de estas pruebas depende de archivos privados de QA ni modifica la muestra publicada.
 
-La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. CTest ejecuta los tres comprobadores registrados; `--output-on-failure` muestra la salida de una prueba si falla. Debe terminar con código cero y mostrar tres pruebas superadas. Las 28, 31 y 54 comprobaciones internas pertenecen a sus respectivos programas y no se registran individualmente en CTest.
+### Guion que comprueba el cliente como proceso
 
-Volver a ejecutar las tres baterías después de un cambio permite detectar si se pierde un comportamiento ya ensayado. Esa comprobación de regresión queda limitada a los datos y condiciones declarados: registro y lote en memoria, lectura del manifiesto, errores globales y preparación de las cadenas de informe. La ejecución de la muestra siguiente comprueba además el recorrido del cliente y sus canales; la variante propia del estudiante requiere sus propias decisiones y pruebas.
+`cliente_casos.cmake` inicia **22 procesos del cliente**. Cada caso fija de forma independiente tres resultados esperados: su código de terminación, todo stdout y todo stderr. Un caso con diferencias en varios de esos resultados cuenta como un solo caso fallido. Las expectativas se escriben a partir del contrato; no se obtienen llamando al lector ni copiando la salida que se acaba de producir.
+
+La orden manual de la receta se ejecuta desde la raíz del repositorio. En CMD, `%CD%` se sustituye por esa carpeta actual:
+
+```cmd
+cmake "-DCLIENTE=%CD%\AssetCheck\build\assetcheck.exe" "-DRAIZ_PRUEBAS=%CD%\AssetCheck\build" -P AssetCheck/pruebas/cliente_casos.cmake
+echo CodigoPruebasCliente=%ERRORLEVEL%
+```
+
+- `-DCLIENTE=...` entrega la ruta del ejecutable ya construido. Las comillas conservan la ruta como un solo argumento si contiene espacios.
+- `-DRAIZ_PRUEBAS=...` entrega el directorio padre donde preparar las entradas y guardar las capturas. Debe existir y pertenecer al árbol de construcción de este proyecto.
+- Ambos parámetros `-D` aparecen antes de `-P`. `-P AssetCheck/pruebas/cliente_casos.cmake` ejecuta ese archivo como un guion de CMake; no configura el proyecto, genera un árbol ni construye el ejecutable.
+
+El guion conserva un archivo de control llamado `cliente_casos.lock` en el directorio padre. Intenta obtener durante un máximo de quince segundos el bloqueo que coordina la reserva entre ejecuciones del mismo guion. Después busca un hijo libre como `cliente_casos_1`, lo crea y libera el bloqueo. Si el nombre ya existe, lo conserva y prueba el siguiente número. Es un bloqueo consultivo: no impide que otro proceso que ignore ese acuerdo intervenga en la carpeta. No se borra ni reutiliza ninguna ejecución anterior.
+
+Dentro del hijo nuevo prepara sus propios manifiestos con `WriteAllBytes` de PowerShell y verifica sus bytes. El escritor general convierte el texto a hexadecimal y transforma cada pareja en un byte, sin traducir los terminadores. El archivo con NUL conserva su construcción explícita: texto ASCII, un byte cero, un LF y la segunda línea válida. Se comprueban el resultado de esa preparación y el contenido hexadecimal completo antes de iniciar los ensayos. Los casos incluyen:
+
+- Archivo vacío, una línea con LF y última línea sin terminador.
+- La muestra de ocho líneas, rechazos locales, conservación del primer origen de un duplicado y TAB permitido entre campos.
+- NUL, byte 127 y CTRL-Z en una línea, seguidos de otra válida que debe conservarse. CTRL-Z no debe terminar antes de tiempo la lectura binaria.
+- Ochenta bytes con CRLF, los rechazos de CRCRLF, CRXLF y 81 bytes, siempre con una segunda línea válida; terminadores mezclados y una línea vacía intermedia.
+- Cien líneas vacías con sus cien rechazos locales; una línea 101 con o sin LF que impide publicar resultados parciales.
+- Ausencia o exceso de argumentos, ruta inexistente y una ruta con espacios.
+
+Cada proceso se inicia sin pasar por una consola intermedia. Sus argumentos se entregan por separado. stdout y stderr se guardan en archivos brutos distintos, con nombres como `04_muestra8.stdout.bin` y `04_muestra8.stderr.bin`. Esos archivos quedan conservados dentro de la carpeta de la ejecución para revisar una discrepancia.
+
+Para comparar un canal, el guion lee sus bytes como parejas de dígitos hexadecimales: por ejemplo, `00` representa NUL, `0d` representa CR y `0a` representa LF. Recorre parejas completas y cambia únicamente la pareja consecutiva CR/LF por LF. Conserva los CR sueltos, NUL, espacios y el salto final; no recorta ni elimina otros caracteres. Compara ese resultado con los bytes del texto esperado. Así tolera la diferencia de terminadores CRLF/LF sin ocultar un byte adicional, un canal equivocado o una salida incompleta.
+
+Los mensajes `PREPARACION` identifican las operaciones de reserva y escritura y, si aparece un error, el problema que impide preparar o completar el ensayo. No se contabiliza como caso superado una preparación fallida. Los mensajes `COMPARACION` identifican el caso y la diferencia de código o de canal, con los bytes esperados y obtenidos y la ruta de su captura. Después de recorrer los ensayos, la ruta normal termina con este resumen, además de los mensajes de preparación anteriores:
+
+```text
+-- DirectorioPruebas=<ruta del hijo nuevo cliente_casos_N>
+-- CasosCLI=22 Fallos=0
+```
+
+El **guion** devuelve 0 cuando coinciden los 22 procesos. Un error de preparación, de CMake o una discrepancia hace terminar el guion con un valor distinto de cero; sus errores controlados usan `FATAL_ERROR` y código 1. Los textos `PREPARACION` y `COMPARACION` permiten distinguir sus causas. Son códigos distintos de los del **cliente** observado: 0 para revisión sin rechazos, 1 para revisión completa con rechazos locales y 2 para error global o cantidad incorrecta de argumentos. Obtener el 1 o el 2 esperado del cliente hace pasar ese caso; no significa que haya fallado el guion.
+
+Estos ensayos acreditan `APERTURA` y `LIMITE_LINEAS` del ejecutable, pero **no provocan ni acreditan un fallo real de lectura del archivo en el proceso del cliente**. La biblioteca comprueba `LECTURA` mediante un origen controlado que falla tras un prefijo; esa prueba no se presenta como ejecución de un dispositivo o disco que falle. No se alteran servicios, red, perfiles ni permisos para fingir ese fallo.
+
+### Ejecutar las cuatro pruebas con CTest
+
+La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. CTest ejecuta los tres comprobadores y el guion del cliente; `--output-on-failure` muestra la salida de una prueba si falla. Debe terminar con código cero y mostrar cuatro pruebas superadas. Las 28, 31 y 56 comprobaciones internas y los 22 procesos del guion pertenecen a esas cuatro pruebas; no se registran individualmente en CTest.
+
+Al registrar `comprobar_cliente`, CMake resuelve `$<TARGET_FILE:assetcheck>` a la ruta del cliente y la entrega a `-DCLIENTE`; también pasa el directorio binario a `-DRAIZ_PRUEBAS`. Esa expresión se resuelve al generar el proyecto, no dentro del guion ejecutado con `-P`. CTest no construye el programa: la construcción de la receta debe haber terminado correctamente. Como el guion manual ya reservó una carpeta, CTest conserva esa carpeta y reserva otra para sus 22 procesos.
+
+Volver a ejecutar las cuatro pruebas después de un cambio permite detectar si se pierde un comportamiento ya ensayado. Esa comprobación de regresión queda limitada a los datos y condiciones declarados: registro y lote en memoria, lectura del manifiesto, errores globales, preparación de las cadenas de informe y los 22 escenarios del proceso del cliente. La ejecución de la muestra siguiente permite observar además su recorrido y sus canales directamente; la variante propia del estudiante requiere sus propias decisiones y pruebas.
 
 ## Ejecutar el cliente con la muestra
 

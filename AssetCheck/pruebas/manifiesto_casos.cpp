@@ -191,6 +191,13 @@ void probar_region(const Lote& informe, const std::string& admisiones,
                         assetcheck::salida_admisiones(informe), admisiones);
         comprobar_texto("rechazos independientes de region",
                         assetcheck::salida_rechazos(informe), rechazos);
+        // 55-56: las reglas de entrada tampoco dependen de esta region.
+        const Lote entrada_valida{{{1, {"Roca", "malla", 30000}}}, {}};
+        probar_flujo("validacion regional acepta digitos",
+            "Roca malla 30000", true, ErrorGlobal::ninguno, entrada_valida);
+        const Lote entrada_rechazada{{}, {{1, Resultado::tamano, 0}}};
+        probar_flujo("validacion regional rechaza agrupacion",
+            "Roca malla 1_2", true, ErrorGlobal::ninguno, entrada_rechazada);
     } catch (const std::exception& e) {
         comprobar("configuracion regional sin excepciones", false);
         std::cerr << "Esperado: completar las comparaciones regionales\n"

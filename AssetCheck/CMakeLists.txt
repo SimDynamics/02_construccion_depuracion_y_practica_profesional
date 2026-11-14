@@ -35,3 +35,9 @@ add_test(NAME comprobar_lote COMMAND comprobar_lote)
 add_executable(comprobar_manifiesto pruebas/manifiesto_casos.cpp)
 target_link_libraries(comprobar_manifiesto PRIVATE assetcheck_manifiesto)
 add_test(NAME comprobar_manifiesto COMMAND comprobar_manifiesto)
+
+add_test(NAME comprobar_cliente
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLIENTE=$<TARGET_FILE:assetcheck>"
+        "-DRAIZ_PRUEBAS=${CMAKE_CURRENT_BINARY_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/pruebas/cliente_casos.cmake")
