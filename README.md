@@ -34,6 +34,7 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/pruebas/comprobar_tipos_cli.cmake`: guion de nueve procesos del segundo cliente, con comparación de código y ambos canales.
 - `AssetCheck/CMakeLists.txt`: cuatro bibliotecas, seis programas y seis pruebas CTest: cuatro comprobadores C++ y dos guiones de procesos.
 - `.gitattributes`: reglas que conservan los finales de línea de las tres muestras al usar Git.
+- `.github/workflows/assetcheck-windows.yml`: compila con MSVC y ejecuta las seis suites en Windows Server 2022, sin reemplazar una prueba manual del estudiante.
 
 La ampliación por tipos usa la biblioteca estática `assetcheck_estadisticas` y el segundo cliente `assetcheck_tipos`, que enlaza también con la biblioteca del manifiesto. El cliente original se conserva. La construcción completa incluye cuatro bibliotecas y seis programas: los dos clientes y los cuatro comprobadores. CTest registra esos cuatro comprobadores y los dos guiones de procesos; sus seis pruebas no equivalen a seis casos individuales.
 
@@ -207,6 +208,8 @@ El **guion** devuelve 0 cuando coinciden los 22 procesos. Un error de preparaci�
 
 Estos ensayos acreditan `APERTURA` y `LIMITE_LINEAS` del ejecutable, pero **no provocan ni acreditan un fallo real de lectura del archivo en el proceso del cliente**. La biblioteca comprueba `LECTURA` mediante un origen controlado que falla tras un prefijo; esa prueba no se presenta como ejecución de un dispositivo o disco que falle. No se alteran servicios, red, perfiles ni permisos para fingir ese fallo.
 
+Durante la primera validación CI en Windows, la batería antigua `cliente_casos.cmake` no pudo crear `nul.txt`: Windows interpreta `NUL` como un nombre reservado de dispositivo, incluso con extensión. Se corrigió solamente el nombre del archivo temporal a `nulo_interno.txt`, sin cambiar el byte NUL contenido en la prueba ni sus expectativas. Tras repetir la validación, las seis suites pasaron. Este fallo fue real en la preparación de pruebas, no un error deliberado del lector ni una modificación del cliente.
+
 ### Ejecutar las seis pruebas con CTest
 
 La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. Ejecuta los cuatro comprobadores y los dos guiones de procesos. `--output-on-failure` muestra la salida de una prueba si falla; `--no-tests=error` impide aceptar como éxito un árbol sin pruebas. Debe terminar con código cero y mostrar seis pruebas superadas. Las 28, 31, 56 y 40 comprobaciones internas y los 22 y nueve procesos de los guiones pertenecen a esas seis pruebas; no se registran individualmente en CTest.
@@ -321,6 +324,10 @@ Cada ejecución reserva un hijo numerado nuevo de DIR bajo un bloqueo consultivo
 La comparación lee HEX y recorre parejas completas para convertir sólo CRLF a LF. Conserva CR sueltos, NUL, espacios y salto final. La lectura del guion publicado encontró que reemplazar 0d0a sin alinear podía cambiar otros bytes: 20d0a0 se convertía en 20a0. Se reutilizó el helper por bytes de la primera CLI. Esto corrige la conservación y el diagnóstico de bytes; no se afirma que aquel ejemplo hiciera pasar un esperado ASCII incorrecto.
 
 Los mensajes PREPARACION indican que no pudo prepararse o completarse el ensayo; COMPARACION señala una diferencia de código o canales. El guion devuelve 0 sólo tras los nueve casos; sus fallos controlados terminan con un valor distinto de 0. Es distinto del código 0/1/2 de cada cliente. Esta batería acredita APERTURA y LIMITE_LINEAS en el ejecutable, pero no provoca ni acredita una LECTURA real del archivo. Las capturas y la variante propia del estudiante conservan su alcance independiente.
+
+## Comprobación automatizada observada
+
+La ampliación por tipos está integrada en CMake y dispone de su cliente y comprobaciones. La revisión `822e84d7` superó [las seis pruebas CTest en GitHub Actions](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43668838549) con MSVC 19.44.35230.0 en Windows Server 2022, incluidos el comprobador de 40 comparaciones y los guiones de 22 y nueve procesos. Esta ejecución automatizada corresponde a esa revisión de la referencia; no acredita capturas, preparación desde un Windows vacío ni reproducción o dominio del estudiante.
 
 ## Entorno local observado
 

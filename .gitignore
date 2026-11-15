@@ -4,17 +4,29 @@
 /AssetCheck/build-*/
 **/.vs/
 
-# Archivos generados y configuracion local
-/build/
-/build-*/
-/out/
+# Salidas locales, configuraciones personales y dependencias generadas.
+**/out/
+**/bin/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/CMakeUserPresets.json
 *.exe
+*.dll
 *.obj
 *.pdb
 *.ilk
+*.idb
+*.suo
+*.user
+*.env
+.env.*
+
+# Preparacion curricular: conservar fuentes y excluir productos locales.
+/build/
+/build-*/
+/out/
 *.lib
 *.exp
 .env
-.env.*
-# El ejemplo publicable debe contener solo datos ficticios, sin secretos.
+# El ejemplo de la raiz debe contener solo datos ficticios, sin secretos.
 !/.env.example

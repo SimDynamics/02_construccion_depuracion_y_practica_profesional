@@ -2,6 +2,8 @@
 
 **Estado: REFERENCIA IMPLEMENTADA Y COMPROBADA EN LOS CASOS DECLARADOS.** La interfaz `include/assetcheck/estadisticas.hpp` y las funciones `contar_tipos` y `salida_tipos` de `src/estadisticas.cpp` forman la biblioteca estática `assetcheck_estadisticas`. El segundo cliente `src/cliente_tipos.cpp` se construye como `assetcheck_tipos` y conserva el cliente original. El comprobador C++ realiza 40 comparaciones y el guion de procesos contrasta nueve invocaciones del segundo cliente. Las expectativas siguientes proceden del contrato; la referencia y las pruebas del autor no acreditan una variante propia ni el dominio del estudiante.
 
+La revisión `822e84d7`, con el normalizador alineado y nueve escenarios del segundo cliente, superó [las seis pruebas CTest en GitHub Actions](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43668838549) con MSVC 19.44.35230.0 en Windows Server 2022. La [comprobación local del autor](../../README.md#entorno-local-observado) identifica por separado sus herramientas y resultados.
+
 ## Proteger el cliente existente
 
 En revisiones completas, `assetcheck` conserva su interfaz publicada: filas `ACEPTADO` y `RESUMEN` en stdout, filas `RECHAZO` en stderr y código 0 sin rechazos o 1 con rechazos. Ante un error global conserva stdout vacío, un diagnóstico en stderr y código 2. Se conservan sus fuentes, bibliotecas, configuración de CMake y pruebas actuales. La nueva presentación corresponde al segundo cliente `assetcheck_tipos`, que reutiliza la misma decisión de lectura y validación.
