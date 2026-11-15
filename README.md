@@ -35,7 +35,7 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `.gitattributes`: reglas que conservan los finales de línea de las tres muestras al usar Git.
 - `.github/workflows/assetcheck-windows.yml`: compila con MSVC y ejecuta las seis suites en Windows Server 2022, sin reemplazar una prueba manual del estudiante.
 
-La ampliación por tipos está integrada en CMake y dispone de su cliente y comprobaciones. Una revisión anterior, con 22 comparaciones de estadísticas, pasó las seis suites con MSVC 19.44 en GitHub Actions sobre Windows Server 2022: [ejecución verificada](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43654009027). Este resultado no acredita capturas ni reproducción en el Windows local del estudiante.
+La ampliación por tipos está integrada en CMake y dispone de su cliente y comprobaciones. La revisión `822e84d7` superó [las seis pruebas CTest en GitHub Actions](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43668838549) con MSVC 19.44.35230.0 en Windows Server 2022, incluidos el comprobador de 40 comparaciones y los guiones de 22 y nueve procesos. Esta ejecución automatizada corresponde a esa revisión de la referencia; no acredita capturas, preparación desde un Windows vacío ni reproducción o dominio del estudiante.
 
 ## Interfaz de la biblioteca del manifiesto
 
@@ -254,3 +254,9 @@ El contrato del cliente exige exactamente una ruta además del nombre del progra
 El [ensayo parcial con seis líneas](AssetCheck/docs/variacion_lector.md) documenta otra entrada y conserva sus expectativas y resultados. Sus órdenes usan Windows PowerShell 5.1 desde **AssetCheck**; las recetas de construcción de este README usan CMD desde la **raíz del repositorio**.
 
 Los árboles `build` contienen archivos generados y permanecen fuera de la publicación. Las fuentes de la prueba mínima se conservan como preparación anterior del entorno.
+
+## Entorno local observado
+
+La comprobación del autor del 14 de noviembre de 2026 utilizó Windows x64, MSVC 19.51.36260.0, CMake 4.3.1-msvc1, Ninja 1.13.2 y Windows PowerShell 5.1.26100.9711 sin perfiles. Con la petición C++23 del proyecto, las órdenes observadas de MSVC usaron `-std:c++latest -MDd`. Ese indicador observado se distingue del mínimo solicitado en CMake.
+
+La configuración y la construcción terminaron con código 0, sin avisos. CTest pasó sus seis pruebas: registro 28, lote 31, manifiesto 56, estadísticas 40 y guiones de 22 y nueve procesos. La invocación manual del segundo guion también contrastó sus nueve procesos, por separado, con los códigos y canales esperados. Estos resultados se obtuvieron con herramientas ya instaladas y no acreditan la preparación de un Windows vacío ni la variante propia del estudiante.
