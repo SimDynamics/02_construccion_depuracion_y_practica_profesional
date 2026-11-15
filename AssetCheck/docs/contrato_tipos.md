@@ -1,6 +1,6 @@
 ﻿# Contrato del resumen por tipo: integración verificada en CI Windows
 
-**Estado: IMPLEMENTACIÓN INTEGRADA Y VALIDADA EN CI WINDOWS.** La biblioteca de estadísticas, `assetcheck_tipos`, las 22 comparaciones de unidad y los nueve escenarios de consola están publicados. [GitHub Actions comprobó seis suites CTest](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43654009027) con MSVC 19.44 en Windows Server 2022. Las salidas previstas se fijaron a partir del contrato antes de ejecutar el segundo cliente. Sigue pendiente la reproducción y captura en el Windows local del estudiante y la autoría de su propia variante.
+**Estado: IMPLEMENTACIÓN INTEGRADA Y PRUEBAS DE ESTADÍSTICAS AMPLIADAS.** La biblioteca de estadísticas, `assetcheck_tipos` y sus pruebas están publicados. La batería actual realiza 40 comparaciones: 32 campos de ocho consultas, cinco preparaciones y tres cadenas de informe. Una revisión anterior, con 22 comparaciones de estadísticas y nueve escenarios de consola, superó [seis suites CTest en GitHub Actions](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43654009027) con MSVC 19.44 en Windows Server 2022; esa ejecución no acredita por sí sola la ampliación de 40. Las expectativas se fijan a partir del contrato antes de ejecutar. Sigue pendiente la reproducción y captura en el Windows local del estudiante y la autoría de su propia variante.
 
 ## Proteger el cliente existente
 

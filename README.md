@@ -22,7 +22,7 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/include/assetcheck/estadisticas.hpp` y `AssetCheck/src/estadisticas.cpp`: consulta de los tipos admitidos y construcción de TIPOS/RESUMEN sin escribir en los canales.
 - `AssetCheck/src/cliente.cpp`: cliente original de consola `assetcheck`, sin cambios por la ampliación.
 - `AssetCheck/src/cliente_tipos.cpp`: segundo cliente `assetcheck_tipos`, reutiliza el lector del manifiesto y publica la estadística sólo tras una revisión completa.
-- `AssetCheck/pruebas/estadisticas_casos.cpp`: 22 comparaciones del cálculo, lotes independientes y tamaño máximo declarado.
+- `AssetCheck/pruebas/estadisticas_casos.cpp`: 40 comparaciones del cálculo, la preparación de admisiones y rechazos, los lotes independientes y los informes esperados.
 - `AssetCheck/pruebas/comprobar_tipos_cli.cmake`: nueve ejecuciones del segundo cliente con oráculos independientes para salida, error y código.
 - `AssetCheck/muestras/lote.txt`: muestra curricular de ocho líneas, con sus bytes conservados.
 - `AssetCheck/muestras/variacion_lector.txt`: muestra de seis líneas para el ensayo parcial del lector, con 94 bytes conservados.
@@ -35,7 +35,7 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `.gitattributes`: reglas que conservan los finales de línea de las tres muestras al usar Git.
 - `.github/workflows/assetcheck-windows.yml`: compila con MSVC y ejecuta las seis suites en Windows Server 2022, sin reemplazar una prueba manual del estudiante.
 
-La ampliación por tipos está integrada en CMake y dispone de su cliente y comprobaciones. El flujo completo de seis suites pasó con MSVC 19.44 en GitHub Actions sobre Windows Server 2022: [ejecución verificada](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43654009027). Este resultado no acredita capturas ni reproducción en el Windows local del estudiante.
+La ampliación por tipos está integrada en CMake y dispone de su cliente y comprobaciones. Una revisión anterior, con 22 comparaciones de estadísticas, pasó las seis suites con MSVC 19.44 en GitHub Actions sobre Windows Server 2022: [ejecución verificada](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43654009027). Este resultado no acredita capturas ni reproducción en el Windows local del estudiante.
 
 ## Interfaz de la biblioteca del manifiesto
 
@@ -104,7 +104,9 @@ La segunda orden construye los seis programas. `--build AssetCheck/build` selecc
 
 El segundo cliente comparte las bibliotecas de registro, lote y manifiesto con el original, pero calcula un resultado distinto a partir de las admisiones de una revisión completa. La función `contar_tipos` devuelve contadores de textura, malla y sonido y la suma de `tamano_bytes` declarados. `salida_tipos` forma únicamente dos filas en stdout: TIPOS y RESUMEN. Los rechazos locales se muestran en stderr y mantienen el código 1; los errores globales conservan ambos canales según el contrato y retornan 2 sin publicar un informe parcial.
 
-`comprobar_estadisticas.exe` debe finalizar con `Comparaciones=22 Fallos=0` y código cero. El guion `comprobar_tipos_cli.cmake` ejecuta nueve escenarios: muestra de ocho líneas con CRLF, archivo vacío, última línea sin LF, duplicado, tamaño inválido, línea 101, ausencia o exceso de argumentos y ruta inexistente. Comprueba por separado cada código y los bytes de stdout y stderr, normalizando exclusivamente CRLF a LF. Los datos de `muestras/variante.txt` se preservan y su SHA-256 se comprueba antes de ejecutarla.
+`comprobar_estadisticas.exe` debe finalizar con `Comparaciones=40 Fallos=0` y código cero.
+
+La batería actual consulta ocho estados y contrasta sus cuatro campos por separado (32 comparaciones). También comprueba cinco preparaciones completas antes de consultar sus lotes y tres cadenas de informe fijadas a partir del contrato. La mezcla de una textura, dos mallas y tres sonidos distingue categorías intercambiadas. Los rechazos anteriores a una admisión, los identificadores `A` y `a`, cien tamaños máximos y las consultas repetidas tienen sus propios valores esperados. Si falla una preparación, el comprobador termina con código 1 antes de consultar ese lote; el resumen puede entonces contener menos de 40 comparaciones. Las tres cadenas se comparan en memoria y no sustituyen las pruebas del proceso cliente. El guion `comprobar_tipos_cli.cmake` ejecuta nueve escenarios: muestra de ocho líneas con CRLF, archivo vacío, última línea sin LF, duplicado, tamaño inválido, línea 101, ausencia o exceso de argumentos y ruta inexistente. Comprueba por separado cada código y los bytes de stdout y stderr, normalizando exclusivamente CRLF a LF. Los datos de `muestras/variante.txt` se preservan y su SHA-256 se comprueba antes de ejecutarla.
 
 Durante la primera validación CI en Windows, la batería antigua `cliente_casos.cmake` no pudo crear `nul.txt`: Windows interpreta `NUL` como un nombre reservado de dispositivo, incluso con extensión. Se corrigió solamente el nombre del archivo temporal a `nulo_interno.txt`, sin cambiar el byte NUL contenido en la prueba ni sus expectativas. Tras repetir la validación, las seis suites pasaron. Este fallo fue real en la preparación de pruebas, no un error deliberado del lector ni una modificación del cliente.
 
@@ -192,7 +194,7 @@ Estos ensayos acreditan `APERTURA` y `LIMITE_LINEAS` del ejecutable, pero **no p
 
 ### Ejecutar las seis pruebas con CTest
 
-La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. CTest ejecuta cuatro comprobadores y dos guiones de cliente; `--output-on-failure` muestra el detalle de cualquier fallo. Debe terminar con código cero y mostrar seis pruebas superadas. Las 28, 31, 56 y 22 comparaciones internas, los 22 procesos del cliente original y las nueve ejecuciones del cliente de tipos pertenecen a estas seis suites; no son pruebas CTest adicionales.
+La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. CTest ejecuta cuatro comprobadores y dos guiones de cliente; `--output-on-failure` muestra el detalle de cualquier fallo. Debe terminar con código cero y mostrar seis pruebas superadas. Las 28, 31, 56 y 40 comparaciones internas, los 22 procesos del cliente original y las nueve ejecuciones del cliente de tipos pertenecen a estas seis suites; no son pruebas CTest adicionales.
 
 Al registrar `comprobar_cliente`, CMake resuelve `$<TARGET_FILE:assetcheck>` a la ruta del cliente y la entrega a `-DCLIENTE`; también pasa el directorio binario a `-DRAIZ_PRUEBAS`. Esa expresión se resuelve al generar el proyecto, no dentro del guion ejecutado con `-P`. CTest no construye el programa: la construcción de la receta debe haber terminado correctamente. Como el guion manual ya reservó una carpeta, CTest conserva esa carpeta y reserva otra para sus 22 procesos.
 
