@@ -3,3 +3,18 @@
 /AssetCheck/build/
 /AssetCheck/build-*/
 **/.vs/
+
+# Archivos generados y configuracion local
+/build/
+/build-*/
+/out/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.lib
+*.exp
+.env
+.env.*
+# El ejemplo publicable debe contener solo datos ficticios, sin secretos.
+!/.env.example

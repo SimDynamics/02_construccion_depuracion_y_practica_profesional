@@ -2,7 +2,7 @@
 
 Referencia didáctica parcial del autor para Programación 2. Se desarrolla junto con la enseñanza del curso; la variante y el aprendizaje del estudiante requieren sus propias prácticas y comprobaciones.
 
-Esta entrega conserva la prueba mínima del entorno en `01_prueba_cmake` y las dos primeras etapas de AssetCheck: validar una declaración y procesar un lote en memoria. Incluye una tercera biblioteca para revisar un manifiesto desde un flujo o un archivo binario y preparar las cadenas de su informe, y un cliente de consola que presenta el resultado de una revisión completa.
+Esta entrega conserva la prueba mínima del entorno en `01_prueba_cmake` y AssetCheck, un verificador de declaraciones de recursos para quien prepara un manifiesto antes de compartirlo. Sus cuatro bibliotecas validan registros, conservan un lote, revisan un manifiesto y calculan estadísticas. Dos clientes de consola presentan informes distintos a partir de una revisión completa; cuatro comprobadores y dos guiones de procesos aportan sus pruebas.
 
 El lector de un registro comprueba formato, identificador, tipo y tamaño, en ese orden. Al rechazar una línea conserva todos los campos del registro anterior. La biblioteca del lote utiliza ese lector y, sólo si la línea es válida, busca su ID entre las admisiones anteriores. La comparación distingue mayúsculas y minúsculas. Un duplicado no reemplaza el primer registro admitido ni su línea de origen; una línea rechazada localmente no reserva su ID.
 
@@ -19,20 +19,23 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/pruebas/lote_casos.cpp`: comprobador del estado completo del lote.
 - `AssetCheck/include/assetcheck/manifiesto.hpp`: interfaz pública de la revisión completa y de la preparación del informe.
 - `AssetCheck/src/manifiesto.cpp`: lectura del flujo o archivo y construcción de las cadenas de salida.
-- `AssetCheck/include/assetcheck/estadisticas.hpp`: interfaz de la consulta de tipos, en etapa parcial.
-- `AssetCheck/src/estadisticas.cpp`: cálculo de tipos y texto TIPOS/RESUMEN; fuentes pendientes de integración en CMake y de un segundo cliente.
-- `AssetCheck/src/cliente.cpp`: cliente de consola `assetcheck`.
+- `AssetCheck/include/assetcheck/estadisticas.hpp`: interfaz de la consulta de tipos.
+- `AssetCheck/src/estadisticas.cpp`: cálculo de tipos y texto TIPOS/RESUMEN de la biblioteca estática `assetcheck_estadisticas`.
+- `AssetCheck/src/cliente.cpp`: cliente original de consola `assetcheck`.
+- `AssetCheck/src/cliente_tipos.cpp`: segundo cliente `assetcheck_tipos`, que presenta TIPOS/RESUMEN y conserva los rechazos en stderr.
 - `AssetCheck/muestras/lote.txt`: muestra curricular de ocho líneas, con sus bytes conservados.
 - `AssetCheck/muestras/variacion_lector.txt`: muestra de seis líneas para el ensayo parcial del lector, con 94 bytes conservados.
-- `AssetCheck/muestras/variante.txt`: tercera muestra, con ocho líneas y expectativas para el contrato planificado de tipos.
+- `AssetCheck/muestras/variante.txt`: tercera muestra, con ocho líneas y expectativas independientes del informe por tipos.
 - `AssetCheck/docs/variacion_lector.md`: expectativas, resultado observado y receta de captura del ensayo parcial del autor.
-- [AssetCheck/docs/contrato_tipos.md](AssetCheck/docs/contrato_tipos.md): contrato de la etapa parcial, con funciones creadas y segundo cliente pendiente.
+- [AssetCheck/docs/contrato_tipos.md](AssetCheck/docs/contrato_tipos.md): decisiones, formatos, expectativas y límites del informe por tipos, con sus dos comprobaciones específicas.
 - `AssetCheck/pruebas/manifiesto_casos.cpp`: comprobador del manifiesto, con archivos de prueba propios.
-- `AssetCheck/pruebas/cliente_casos.cmake`: guion que ejecuta el cliente y compara su código y sus dos canales.
-- `AssetCheck/CMakeLists.txt`: tres bibliotecas y cuatro programas: el cliente y los tres comprobadores. CTest registra cuatro pruebas: los tres comprobadores y el guion del cliente.
+- `AssetCheck/pruebas/cliente_casos.cmake`: guion de 22 procesos del cliente original, con comparación de código y ambos canales.
+- `AssetCheck/pruebas/estadisticas_casos.cpp`: comprobador de 40 comparaciones de estadísticas y preparación del lote.
+- `AssetCheck/pruebas/comprobar_tipos_cli.cmake`: guion de nueve procesos del segundo cliente, con comparación de código y ambos canales.
+- `AssetCheck/CMakeLists.txt`: cuatro bibliotecas, seis programas y seis pruebas CTest: cuatro comprobadores C++ y dos guiones de procesos.
 - `.gitattributes`: reglas que conservan los finales de línea de las tres muestras al usar Git.
 
-La ampliación por tipos tiene cabecera y funciones de consulta, pero aún no está integrada en CMake ni dispone del segundo cliente. La receta de construcción siguiente sigue construyendo las tres bibliotecas y los cuatro programas anteriores.
+La ampliación por tipos usa la biblioteca estática `assetcheck_estadisticas` y el segundo cliente `assetcheck_tipos`, que enlaza también con la biblioteca del manifiesto. El cliente original se conserva. La construcción completa incluye cuatro bibliotecas y seis programas: los dos clientes y los cuatro comprobadores. CTest registra esos cuatro comprobadores y los dos guiones de procesos; sus seis pruebas no equivalen a seis casos individuales.
 
 ## Interfaz de la biblioteca del manifiesto
 
@@ -63,14 +66,14 @@ El guion del cliente necesita además Windows PowerShell 5.1. Utiliza el ejecuta
 - `CMAKE_CXX_STANDARD_REQUIRED ON` evita que se sustituya esa petición por un estándar anterior.
 - `CMAKE_CXX_EXTENSIONS OFF` solicita el modo sin extensiones propias del compilador cuando este distingue esos modos.
 
-Las tres bibliotecas declaran además `cxx_std_23` con alcance `PUBLIC`: comunican ese mínimo de modo de lenguaje a sus consumidores. Un mínimo permite un modo posterior y no garantiza por sí solo que el compilador implemente cada característica concreta del estándar. La orden de configuración siguiente utiliza los valores ya definidos en el proyecto.
+Las cuatro bibliotecas declaran además `cxx_std_23` con alcance `PUBLIC`: comunican ese mínimo de modo de lenguaje a sus consumidores. Un mínimo permite un modo posterior y no garantiza por sí solo que el compilador implemente cada característica concreta del estándar. La orden de configuración siguiente utiliza los valores ya definidos en el proyecto.
 
 Ejecuta cada orden por separado y consulta inmediatamente su código. Las líneas `echo` muestran el código de la orden anterior: cero indica éxito. Si configuración o construcción devuelve otro valor, corrige el primer error antes de continuar; ejecutar un binario anterior no acredita la fuente actual. Si un comprobador o CTest devuelve un valor distinto de cero, revisa sus diagnósticos y vuelve a comprobar tras corregir la causa.
 
 ```cmd
 cmake -S AssetCheck -B AssetCheck/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 echo CodigoConfiguracion=%ERRORLEVEL%
-cmake --build AssetCheck/build --target assetcheck comprobar_registro comprobar_lote comprobar_manifiesto
+cmake --build AssetCheck/build --verbose
 echo CodigoConstruccion=%ERRORLEVEL%
 AssetCheck\build\comprobar_registro.exe
 echo CodigoRegistro=%ERRORLEVEL%
@@ -80,7 +83,7 @@ AssetCheck\build\comprobar_manifiesto.exe "AssetCheck\build"
 echo CodigoManifiesto=%ERRORLEVEL%
 cmake "-DCLIENTE=%CD%\AssetCheck\build\assetcheck.exe" "-DRAIZ_PRUEBAS=%CD%\AssetCheck\build" -P AssetCheck/pruebas/cliente_casos.cmake
 echo CodigoPruebasCliente=%ERRORLEVEL%
-ctest --test-dir AssetCheck/build --output-on-failure
+ctest --test-dir AssetCheck/build --output-on-failure --no-tests=error
 echo CodigoCTest=%ERRORLEVEL%
 ```
 
@@ -91,11 +94,40 @@ La primera orden configura el proyecto y genera los archivos de construcción:
 - `-G Ninja` selecciona el generador Ninja.
 - `-DCMAKE_BUILD_TYPE=Debug` selecciona la configuración de depuración de este generador.
 
-La segunda orden construye los cuatro programas. `--build AssetCheck/build` selecciona el árbol generado; `--target assetcheck comprobar_registro comprobar_lote comprobar_manifiesto` indica el cliente y los tres comprobadores. CMake construye también sus dependencias: el cliente y el comprobador del manifiesto necesitan la biblioteca del manifiesto, que enlaza con lote y registro. Las tres bibliotecas son estáticas y no se ejecutan por su cuenta. Después se ejecutan directamente los tres comprobadores; el último recibe la carpeta de construcción como directorio padre de sus archivos de prueba. La orden siguiente ejecuta el guion de CMake que comprueba el cliente. Por último, CTest vuelve a ejecutar las tres baterías y el guion: son cuatro pruebas registradas, aunque siguen existiendo cuatro programas.
+La segunda orden construye todos los objetivos del proyecto. `--build AssetCheck/build` selecciona el árbol generado y `--verbose` permite consultar las órdenes de compilación y enlace. CMake construye también las dependencias: estadísticas usa lote y registro; ambos clientes necesitan manifiesto, lote y registro, y el segundo usa además estadísticas. Las cuatro bibliotecas son estáticas y no se ejecutan por su cuenta. Cada archivo estático contiene sus propios objetos; las dependencias de enlace se conservan para el consumidor, sin fusionar los otros archivos de biblioteca. Las órdenes siguientes permiten consultar directamente los tres comprobadores iniciales y el guion del primer cliente. La sección de estadísticas explica su ejecución directa. CTest ejecuta las seis pruebas registradas, incluidos ambos guiones; no construye los programas.
+
+## Segundo cliente: informe por tipos
+
+Desde la misma consola CMD y la raíz del repositorio, ejecuta después de construir:
+
+```cmd
+AssetCheck\build\assetcheck_tipos.exe "AssetCheck\muestras\variante.txt"
+echo CodigoTipos=%ERRORLEVEL%
+```
+
+El argumento es la ruta de la tercera muestra publicada, de 131 bytes. El cliente primero revisa el archivo completo. Sólo si la revisión es completa, aunque algunas líneas se rechacen, calcula los tipos de las admisiones y forma el informe. stdout esperado contiene estas dos filas:
+
+```text
+TIPOS textura=1 malla=1 sonido=2 bytes_total=255
+RESUMEN lineas=8 aceptados=4 rechazados=4
+```
+
+stderr esperado contiene las cuatro filas de rechazo, conservando su orden y el primer origen del duplicado:
+
+```text
+RECHAZO linea=1 causa=TAMANO
+RECHAZO linea=4 causa=DUPLICADO primera=2
+RECHAZO linea=6 causa=ID
+RECHAZO linea=7 causa=FORMATO
+```
+
+Cada fila termina con un salto lógico; para comparar capturas, normaliza únicamente CRLF a LF. El código esperado es 1 por los rechazos locales de esta revisión completa. Una revisión completa sin rechazos devuelve 0. Un error global devuelve 2, deja stdout vacío y escribe sólo su diagnóstico en stderr, sin informe parcial. La cantidad incorrecta de argumentos usa APERTURA y código 2 antes de intentar abrir un archivo, como el cliente original.
+
+Estos resultados son expectativas independientes del contrato, detalladas en [contrato_tipos.md](AssetCheck/docs/contrato_tipos.md). El comprobador de estadísticas y el guion del segundo cliente los contrastan en sus casos declarados. No se atribuye un fallo real LECTURA al ejecutable por comprobar únicamente APERTURA o LIMITE_LINEAS. La referencia y sus resultados no acreditan la variante propia ni el dominio del estudiante.
 
 ## Resultados esperados y regresión
 
-Los tres comprobadores utilizan datos y expectativas declarados en su código, sin leer entrada de consola. El comprobador del manifiesto prepara además sus archivos de prueba dentro del directorio que se explica más abajo.
+Los cuatro comprobadores utilizan datos y expectativas declarados en su código, sin leer entrada de consola. El comprobador del manifiesto prepara además sus archivos de prueba dentro del directorio que se explica más abajo.
 
 `comprobar_registro.exe` debe escribir:
 
@@ -175,13 +207,13 @@ El **guion** devuelve 0 cuando coinciden los 22 procesos. Un error de preparaci�
 
 Estos ensayos acreditan `APERTURA` y `LIMITE_LINEAS` del ejecutable, pero **no provocan ni acreditan un fallo real de lectura del archivo en el proceso del cliente**. La biblioteca comprueba `LECTURA` mediante un origen controlado que falla tras un prefijo; esa prueba no se presenta como ejecución de un dispositivo o disco que falle. No se alteran servicios, red, perfiles ni permisos para fingir ese fallo.
 
-### Ejecutar las cuatro pruebas con CTest
+### Ejecutar las seis pruebas con CTest
 
-La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. CTest ejecuta los tres comprobadores y el guion del cliente; `--output-on-failure` muestra la salida de una prueba si falla. Debe terminar con código cero y mostrar cuatro pruebas superadas. Las 28, 31 y 56 comprobaciones internas y los 22 procesos del guion pertenecen a esas cuatro pruebas; no se registran individualmente en CTest.
+La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. Ejecuta los cuatro comprobadores y los dos guiones de procesos. `--output-on-failure` muestra la salida de una prueba si falla; `--no-tests=error` impide aceptar como éxito un árbol sin pruebas. Debe terminar con código cero y mostrar seis pruebas superadas. Las 28, 31, 56 y 40 comprobaciones internas y los 22 y nueve procesos de los guiones pertenecen a esas seis pruebas; no se registran individualmente en CTest.
 
 Al registrar `comprobar_cliente`, CMake resuelve `$<TARGET_FILE:assetcheck>` a la ruta del cliente y la entrega a `-DCLIENTE`; también pasa el directorio binario a `-DRAIZ_PRUEBAS`. Esa expresión se resuelve al generar el proyecto, no dentro del guion ejecutado con `-P`. CTest no construye el programa: la construcción de la receta debe haber terminado correctamente. Como el guion manual ya reservó una carpeta, CTest conserva esa carpeta y reserva otra para sus 22 procesos.
 
-Volver a ejecutar las cuatro pruebas después de un cambio permite detectar si se pierde un comportamiento ya ensayado. Esa comprobación de regresión queda limitada a los datos y condiciones declarados: registro y lote en memoria, lectura del manifiesto, errores globales, preparación de las cadenas de informe y los 22 escenarios del proceso del cliente. La ejecución de la muestra siguiente permite observar además su recorrido y sus canales directamente; la variante propia del estudiante requiere sus propias decisiones y pruebas.
+Tras cambiar el programa, volver a ejecutar las seis pruebas permite detectar si se pierde un comportamiento ya ensayado. Su alcance queda limitado a los datos y condiciones declarados: registro y lote en memoria, lectura del manifiesto, errores globales, preparación de cadenas, estadísticas y los 22 y nueve escenarios de los clientes. La muestra siguiente permite observar además el cliente original directamente; la variante propia del estudiante requiere sus propias decisiones y pruebas.
 
 ## Ejecutar el cliente con la muestra
 
@@ -237,3 +269,61 @@ El contrato del cliente exige exactamente una ruta además del nombre del progra
 El [ensayo parcial con seis líneas](AssetCheck/docs/variacion_lector.md) documenta otra entrada y conserva sus expectativas y resultados. Sus órdenes usan Windows PowerShell 5.1 desde **AssetCheck**; las recetas de construcción de este README usan CMD desde la **raíz del repositorio**.
 
 Los árboles `build` contienen archivos generados y permanecen fuera de la publicación. Las fuentes de la prueba mínima se conservan como preparación anterior del entorno.
+
+
+## Comprobador de estadísticas
+
+`AssetCheck/pruebas/estadisticas_casos.cpp` se construye como `comprobar_estadisticas` y tiene su propia prueba CTest. Comprueba las funciones de estadísticas y el estado del lote preparado; los guiones de procesos se ocupan de las interfaces de los clientes.
+
+El nuevo comprobador verifica ocho estados. Compara los cuatro campos de cada resultado por separado, comprueba cinco lotes preparados completos antes de contar y contrasta tres cadenas completas de TIPOS/RESUMEN. Son 32 + 5 + 3 = 40 comparaciones. La mezcla normal espera una textura, dos mallas, tres sonidos y 27 bytes declarados; esas cantidades diferentes detectan también intercambios de categorías. Los esperados son literales independientes de `contar_tipos` y de la consulta anterior.
+
+Desde CMD x64 de desarrollo y la raíz del repositorio, ejecuta cada orden por separado:
+
+```cmd
+cmake -S AssetCheck -B AssetCheck/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+echo CodigoConfiguracion=%ERRORLEVEL%
+cmake --build AssetCheck/build --target comprobar_estadisticas --verbose
+echo CodigoConstruccionEstadisticas=%ERRORLEVEL%
+AssetCheck\build\comprobar_estadisticas.exe
+echo CodigoComprobadorEstadisticas=%ERRORLEVEL%
+ctest --test-dir AssetCheck/build -R "^comprobar_estadisticas$" --output-on-failure --no-tests=error
+echo CodigoCTestEstadisticas=%ERRORLEVEL%
+```
+
+La construcción selecciona sólo el nuevo comprobador y sus dependencias. La ejecución directa debe escribir `Comparaciones=40 Fallos=0` y un salto final, con stderr vacío y código 0. Una discrepancia produce código 1 y diagnóstico en stderr; si falla la preparación, la batería se detiene con un resumen parcial y señala `preparacion/...`, sin atribuir ese lote incorrecto a la función de estadísticas. El CTest focal debe mostrar una prueba superada. `-R` selecciona el nombre completo mediante la expresión entre `^` y `$`; `--no-tests=error` impide interpretar una selección vacía como éxito. CTest no construye el ejecutable.
+
+La batería incluye vacío, duplicados, rechazos anteriores a una admisión, diferencias de mayúsculas, sólo rechazos, cien admisiones de 30000 bytes, una consulta repetida y un vacío posterior. No ejecuta el segundo cliente, no abre manifiestos y no añade automatización CI. La referencia y sus pruebas no acreditan la autoría ni el dominio del estudiante.
+
+
+## Nueve pruebas de proceso del segundo cliente
+
+`AssetCheck/pruebas/comprobar_tipos_cli.cmake` registra una prueba CTest para nueve procesos de `assetcheck_tipos`. El proyecto mantiene cuatro bibliotecas, seis programas y seis pruebas CTest: cuatro comprobadores C++ y dos guiones de procesos. No se añade un ejecutable llamado comprobar_tipos_cli.
+
+El guion inicia nueve procesos de assetcheck_tipos y compara de forma independiente cada código, todo stdout y todo stderr: muestra publicada, vacío, una admisión sin terminador final, duplicado, tamaño cero, línea 101, ausencia de argumentos, argumento adicional y ruta inexistente. Las expectativas son literales del contrato y no se calculan con las funciones comprobadas. El guion se detiene en la primera discrepancia; sólo tras completar los nueve casos escribe `CasosCLI=9; directorio=...` y devuelve 0.
+
+Desde CMD x64 de desarrollo y la raíz del repositorio, ejecuta cada orden por separado:
+
+```cmd
+cmake -S AssetCheck -B AssetCheck/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+echo CodigoConfiguracion=%ERRORLEVEL%
+cmake --build AssetCheck/build --verbose
+echo CodigoConstruccion=%ERRORLEVEL%
+cmake "-DCLIENTE=%CD%\AssetCheck\build\assetcheck_tipos.exe" "-DDIR=%CD%\AssetCheck\build" -P AssetCheck/pruebas/comprobar_tipos_cli.cmake
+echo CodigoGuionTipos=%ERRORLEVEL%
+ctest --test-dir AssetCheck/build --output-on-failure --no-tests=error
+echo CodigoCTest=%ERRORLEVEL%
+```
+
+CLIENTE recibe un ejecutable ya construido y DIR el directorio padre de datos y capturas. Los dos parámetros aparecen antes de -P. CMake resuelve `$<TARGET_FILE:assetcheck_tipos>` al generar el proyecto y CTest recibe la ruta generada; el guion no evalúa esa expresión por sí mismo. Las órdenes deben terminar con 0, aunque algunos procesos observados deban devolver 1 o 2 según su caso.
+
+Cada ejecución reserva un hijo numerado nuevo de DIR bajo un bloqueo consultivo del propio guion; conserva el archivo de control y todas las carpetas anteriores. Dentro prepara sus datos y captura stdout/stderr como archivos brutos distintos. La muestra de 131 bytes se lee desde muestras/variante.txt y se protege con su SHA; no se reescribe. Los demás datos usan líneas de texto válidas con LF o CRLF, sin prometer una representación binaria idéntica entre plataformas.
+
+La comparación lee HEX y recorre parejas completas para convertir sólo CRLF a LF. Conserva CR sueltos, NUL, espacios y salto final. La lectura del guion publicado encontró que reemplazar 0d0a sin alinear podía cambiar otros bytes: 20d0a0 se convertía en 20a0. Se reutilizó el helper por bytes de la primera CLI. Esto corrige la conservación y el diagnóstico de bytes; no se afirma que aquel ejemplo hiciera pasar un esperado ASCII incorrecto.
+
+Los mensajes PREPARACION indican que no pudo prepararse o completarse el ensayo; COMPARACION señala una diferencia de código o canales. El guion devuelve 0 sólo tras los nueve casos; sus fallos controlados terminan con un valor distinto de 0. Es distinto del código 0/1/2 de cada cliente. Esta batería acredita APERTURA y LIMITE_LINEAS en el ejecutable, pero no provoca ni acredita una LECTURA real del archivo. Las capturas y la variante propia del estudiante conservan su alcance independiente.
+
+## Entorno local observado
+
+La comprobación del autor del 14 de noviembre de 2026 utilizó Windows x64, MSVC 19.51.36260.0, CMake 4.3.1-msvc1, Ninja 1.13.2 y Windows PowerShell 5.1.26100.9711 sin perfiles. Con la petición C++23 del proyecto, las órdenes observadas de MSVC usaron `-std:c++latest -MDd`. Ese indicador observado se distingue del mínimo solicitado en CMake.
+
+La configuración y la construcción terminaron con código 0, sin avisos. CTest pasó sus seis pruebas: registro 28, lote 31, manifiesto 56, estadísticas 40 y guiones de 22 y nueve procesos. La invocación manual del segundo guion también contrastó sus nueve procesos, por separado, con los códigos y canales esperados. Estos resultados se obtuvieron con herramientas ya instaladas y no acreditan la preparación de un Windows vacío ni la variante propia del estudiante.

@@ -21,8 +21,16 @@ target_include_directories(assetcheck_manifiesto PUBLIC include)
 target_link_libraries(assetcheck_manifiesto PUBLIC assetcheck_lote)
 target_compile_features(assetcheck_manifiesto PUBLIC cxx_std_23)
 
+add_library(assetcheck_estadisticas STATIC src/estadisticas.cpp)
+target_include_directories(assetcheck_estadisticas PUBLIC include)
+target_link_libraries(assetcheck_estadisticas PUBLIC assetcheck_lote)
+target_compile_features(assetcheck_estadisticas PUBLIC cxx_std_23)
+
 add_executable(assetcheck src/cliente.cpp)
 target_link_libraries(assetcheck PRIVATE assetcheck_manifiesto)
+
+add_executable(assetcheck_tipos src/cliente_tipos.cpp)
+target_link_libraries(assetcheck_tipos PRIVATE assetcheck_estadisticas assetcheck_manifiesto)
 
 add_executable(comprobar_registro pruebas/casos.cpp)
 target_link_libraries(comprobar_registro PRIVATE assetcheck_registro)
@@ -35,6 +43,16 @@ add_test(NAME comprobar_lote COMMAND comprobar_lote)
 add_executable(comprobar_manifiesto pruebas/manifiesto_casos.cpp)
 target_link_libraries(comprobar_manifiesto PRIVATE assetcheck_manifiesto)
 add_test(NAME comprobar_manifiesto COMMAND comprobar_manifiesto)
+
+add_executable(comprobar_estadisticas pruebas/estadisticas_casos.cpp)
+target_link_libraries(comprobar_estadisticas PRIVATE assetcheck_estadisticas)
+add_test(NAME comprobar_estadisticas COMMAND comprobar_estadisticas)
+
+add_test(NAME comprobar_tipos_cli
+    COMMAND "${CMAKE_COMMAND}"
+        "-DCLIENTE=$<TARGET_FILE:assetcheck_tipos>"
+        "-DDIR=${CMAKE_CURRENT_BINARY_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/pruebas/comprobar_tipos_cli.cmake")
 
 add_test(NAME comprobar_cliente
     COMMAND "${CMAKE_COMMAND}"
