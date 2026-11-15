@@ -20,4 +20,13 @@
 *.user
 *.env
 .env.*
-!**/.env.example
+
+# Preparacion curricular: conservar fuentes y excluir productos locales.
+/build/
+/build-*/
+/out/
+*.lib
+*.exp
+.env
+# El ejemplo de la raiz debe contener solo datos ficticios, sin secretos.
+!/.env.example
