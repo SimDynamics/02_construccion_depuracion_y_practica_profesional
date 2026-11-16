@@ -1,6 +1,6 @@
 ﻿# Contrato del resumen por tipo
 
-**Estado: REFERENCIA IMPLEMENTADA Y COMPROBADA EN LOS CASOS DECLARADOS.** La interfaz `include/assetcheck/estadisticas.hpp` y las funciones `contar_tipos` y `salida_tipos` de `src/estadisticas.cpp` forman la biblioteca estática `assetcheck_estadisticas`. El segundo cliente `src/cliente_tipos.cpp` se construye como `assetcheck_tipos` y conserva el cliente original. El comprobador C++ realiza 40 comparaciones y el guion de procesos contrasta nueve invocaciones del segundo cliente. Las expectativas siguientes proceden del contrato; la referencia y las pruebas del autor no acreditan una variante propia ni el dominio del estudiante.
+**Estado: REFERENCIA IMPLEMENTADA Y COMPROBADA EN LOS CASOS DECLARADOS.** La interfaz `include/assetcheck/estadisticas.hpp` y las funciones `contar_tipos` y `salida_tipos` de `src/estadisticas.cpp` forman la biblioteca estática `assetcheck_estadisticas`. El segundo cliente `src/cliente_tipos.cpp` se construye como `assetcheck_tipos` y conserva el cliente original. El comprobador C++ realiza 40 comparaciones y el guion de procesos contrasta once invocaciones del segundo cliente. Las expectativas siguientes proceden del contrato; la referencia y las pruebas del autor no acreditan una variante propia ni el dominio del estudiante.
 
 La revisión `822e84d7`, con el normalizador alineado y nueve escenarios del segundo cliente, superó [las seis pruebas CTest en GitHub Actions](https://github.com/SimDynamics/02_construccion_depuracion_y_practica_profesional/actions/runs/43668838549) con MSVC 19.44.35230.0 en Windows Server 2022. La [comprobación local del autor](../../README.md#entorno-local-observado) identifica por separado sus herramientas y resultados.
 
@@ -78,7 +78,7 @@ Código esperado: **1**. Son cuatro admisiones y cuatro rechazos en una revisió
 
 ## Componentes y comprobaciones
 
-La configuración de CMake conserva `assetcheck_estadisticas` después de manifiesto y antes de los programas. `assetcheck_tipos` compila `src/cliente_tipos.cpp` y enlaza con `assetcheck_estadisticas` y `assetcheck_manifiesto` mediante PRIVATE. Las cuatro bibliotecas mantienen sus dependencias y los valores comunes de lenguaje. El proyecto tiene cuatro bibliotecas, seis programas y seis pruebas CTest: cuatro comprobadores C++ y dos guiones de procesos. Se conservan el cliente original, las demás fuentes y las tres muestras. El detalle de construcción y las herramientas observadas están en el [README](../../README.md).
+La configuración de CMake conserva `assetcheck_estadisticas` después de manifiesto y antes de los programas. `assetcheck_tipos` compila `src/cliente_tipos.cpp` y enlaza con `assetcheck_estadisticas` y `assetcheck_manifiesto` mediante PRIVATE. Las cuatro bibliotecas mantienen sus dependencias y los valores comunes de lenguaje. El proyecto conserva cuatro bibliotecas, los dos clientes y los cuatro comprobadores. En Windows añade el ejecutable `comprobar_lectura_windows` y dos pruebas de lectura real, por lo que CTest registra ocho pruebas. Se conservan el cliente original, las demás fuentes y las tres muestras. El detalle de construcción y las herramientas observadas están en el [README](../../README.md).
 
 
 ## Comprobador de estadísticas
@@ -98,12 +98,12 @@ Vacío después de la mezcla: 0/0/0/0.
 
 Cada fila origina cuatro comparaciones. Cinco verificaciones adicionales contrastan el lote preparado completo: tamaños y orden de ambos vectores, líneas, ID, tipo, tamaño, causa y primer origen. Tres verificaciones comparan las cadenas enteras de vacío, mezcla y máximo. El resumen normal es `Comparaciones=40 Fallos=0`, stderr vacío y código 0. Una discrepancia devuelve 1; una preparación incorrecta detiene el resto y se distingue por su nombre en el diagnóstico. No se utilizan resultados de la propia función como esperados.
 
-El comprobador de estadísticas conserva las bibliotecas, ambos clientes, las tres muestras y las pruebas anteriores. Sus comprobaciones en memoria complementan los guiones de procesos; no provocan un fallo real LECTURA del archivo en un cliente. Ese comportamiento conserva su alcance pendiente.
+El comprobador de estadísticas conserva las bibliotecas, ambos clientes, las tres muestras y las pruebas anteriores. Sus comprobaciones en memoria complementan los guiones de procesos. La prueba adicional `comprobar_lectura_tipos` provoca LECTURA en el cliente real mediante un rango bloqueado de un archivo temporal; también comprueba la lectura normal antes y después del bloqueo y la conservación del lote anterior.
 
 
 ## Comprobación del segundo cliente como proceso
 
-`pruebas/comprobar_tipos_cli.cmake` y su `add_test` forman una de las seis pruebas CTest del proyecto. El guion observa nueve procesos de `assetcheck_tipos`; no es otro cliente ni una biblioteca.
+`pruebas/comprobar_tipos_cli.cmake` y su `add_test` forman una de las ocho pruebas CTest del proyecto en Windows. El guion observa once procesos de `assetcheck_tipos`; no es otro cliente ni una biblioteca.
 
 Las filas siguientes resumen los valores del contrato. Las cadenas literales completas, con sus rótulos, espacios y saltos finales, están en el guion.
 
@@ -116,7 +116,9 @@ Ciento una líneas vacías: stdout vacío; ERROR causa=LIMITE_LINEAS en stderr; 
 Sin ruta: stdout vacío; ERROR causa=APERTURA en stderr; código 2.
 Una ruta y un argumento adicional: stdout vacío; ERROR causa=APERTURA en stderr; código 2.
 Ruta inexistente: stdout vacío; ERROR causa=APERTURA en stderr; código 2.
+Fronteras con prefijo válido: estadísticas 1/0/0/5 y resumen 6/1/5; rechazos de las líneas 2 a 6 en orden FORMATO, ID, TIPO, TAMANO y FORMATO. La última declaración contiene CR aislado al EOF; código 1.
+Límite de líneas tras dos admisiones: stdout vacío; únicamente ERROR causa=LIMITE_LINEAS en stderr; código 2.
 
 En las estadísticas abreviadas, el orden es texturas/mallas/sonidos/bytes_total; en el resumen es líneas/admitidos/rechazados. El guion compara por separado stdout y stderr y normaliza exclusivamente CRLF a LF, recorriendo parejas de bytes. Conserva NUL, CR sueltos, espacios y salto final. Los códigos esperados del cliente no son los del guion ni los de CTest.
 
-El guion se detiene ante la primera discrepancia. PREPARACION señala que no se pudo preparar o completar el ensayo; no acredita un caso correcto. COMPARACION identifica resultados distintos. Sólo tras los nueve veredictos correctos muestra CasosCLI=9 y devuelve 0. Es una prueba CTest para esos nueve procesos. No acredita una LECTURA real del proceso ni atribuye al estudiante la autoría o el dominio de la referencia.
+El guion se detiene ante la primera discrepancia. PREPARACION señala que no se pudo preparar o completar el ensayo; no acredita un caso correcto. COMPARACION identifica resultados distintos. Sólo tras los once veredictos correctos muestra CasosCLI=11 y devuelve 0. Es una prueba CTest para esos once procesos. La LECTURA real del proceso se comprueba por separado en `comprobar_lectura_tipos`: stdout vacío, diagnóstico global único y código 2. Estas pruebas no atribuyen al estudiante la autoría ni el dominio de la referencia.

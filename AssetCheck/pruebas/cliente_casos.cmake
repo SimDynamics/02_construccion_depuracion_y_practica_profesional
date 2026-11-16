@@ -140,6 +140,19 @@ escribir("cientouna_lf.txt" "${cien_lineas}\n")
 escribir("cientouna_sin_lf.txt" "${cien_lineas}A malla 1")
 escribir("ruta con espacios.txt" "Espacio sonido 2\n")
 
+# Fronteras publicadas en U4L6/U4L7: LF entre lineas y CR aislado al EOF.
+set(fronteras "Faro textura 5\n_Mal imagen 0 extra\n_Mal imagen 0\nValido imagen 0\nValido malla 0\nEco sonido 2\r")
+string(REPEAT "\n" 99 lineas_limite)
+set(limite_prefijo "Faro textura 5\nEco sonido 2\n${lineas_limite}")
+escribir("fronteras.dat" "${fronteras}")
+escribir("limite_prefijo.dat" "${limite_prefijo}")
+file(SHA256 "${DIRECTORIO}/fronteras.dat" huella_fronteras)
+file(SHA256 "${DIRECTORIO}/limite_prefijo.dat" huella_limite)
+if(NOT huella_fronteras STREQUAL "3710009967d4da88e53968a83ba2b19ed37cb23107f002ce1b83659185e3bb99"
+    OR NOT huella_limite STREQUAL "a23343a769698e610bf50ac77c2ab6d4e6516d5f4c4298af6858f86e18439e9b")
+    error_preparacion("Las fronteras no conservan los bytes de U4L6/U4L7.")
+endif()
+
 # === NORMALIZAR_SOLO_CRLF ===
 # Se leen canales en HEX para conservar incluso un NUL que el cliente emita.
 # Cada paso consume pares completos de digitos: 0d seguido de 0a -> 0a.
@@ -296,11 +309,20 @@ probar("22_ctrl_z" 1
     "ACEPTADO linea=2 id=Despues tipo=sonido bytes=2\nRESUMEN lineas=2 aceptados=1 rechazados=1\n"
     "RECHAZO linea=1 causa=FORMATO\n" "${DIRECTORIO}/ctrl_z.txt")
 
+# Se conservan los 22 casos anteriores. Estas entradas distinguen borrar CR
+# al EOF y publicar el prefijo de una revision que supera cien lineas.
+probar("23_fronteras" 1
+    "ACEPTADO linea=1 id=Faro tipo=textura bytes=5\nRESUMEN lineas=6 aceptados=1 rechazados=5\n"
+    "RECHAZO linea=2 causa=FORMATO\nRECHAZO linea=3 causa=ID\nRECHAZO linea=4 causa=TIPO\nRECHAZO linea=5 causa=TAMANO\nRECHAZO linea=6 causa=FORMATO\n"
+    "${DIRECTORIO}/fronteras.dat")
+probar("24_limite_prefijo" 2 "" "ERROR causa=LIMITE_LINEAS\n"
+    "${DIRECTORIO}/limite_prefijo.dat")
+
 # === RESUMEN ===
 message(STATUS "DirectorioPruebas=${DIRECTORIO}")
 message(STATUS "CasosCLI=${CASOS} Fallos=${FALLOS}")
-if(NOT CASOS EQUAL 22)
-    error_preparacion("El guion no recorrio los 22 casos previstos.")
+if(NOT CASOS EQUAL 24)
+    error_preparacion("El guion no recorrio los 24 casos previstos.")
 endif()
 if(FALLOS GREATER 0)
     message(FATAL_ERROR "COMPARACION: ${FALLOS} de ${CASOS} casos no coinciden.")

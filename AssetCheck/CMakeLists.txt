@@ -59,3 +59,21 @@ add_test(NAME comprobar_cliente
         "-DCLIENTE=$<TARGET_FILE:assetcheck>"
         "-DRAIZ_PRUEBAS=${CMAKE_CURRENT_BINARY_DIR}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/pruebas/cliente_casos.cmake")
+
+# El error real de archivo se provoca desde otro handle, sin modos especiales
+# ni inyecciones en los clientes de produccion.
+if(WIN32)
+    add_executable(comprobar_lectura_windows pruebas/lectura_windows.cpp)
+    target_link_libraries(comprobar_lectura_windows PRIVATE assetcheck_manifiesto)
+
+    add_test(NAME comprobar_lectura_cliente
+        COMMAND comprobar_lectura_windows
+            "$<TARGET_FILE:assetcheck>" admisiones
+            "${CMAKE_CURRENT_BINARY_DIR}")
+    add_test(NAME comprobar_lectura_tipos
+        COMMAND comprobar_lectura_windows
+            "$<TARGET_FILE:assetcheck_tipos>" tipos
+            "${CMAKE_CURRENT_BINARY_DIR}")
+    set_tests_properties(comprobar_lectura_cliente comprobar_lectura_tipos
+        PROPERTIES TIMEOUT 120)
+endif()

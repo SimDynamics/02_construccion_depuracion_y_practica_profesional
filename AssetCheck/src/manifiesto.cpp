@@ -1,13 +1,68 @@
 ﻿#include "assetcheck/manifiesto.hpp"
-#include <fstream>
+#include <array>
+#include <cstdio>
+#include <ios>
+#include <memory>
+#include <streambuf>
 #include <istream>
 #include <locale>
 #include <new>
 #include <sstream>
 #include <utility>
 
+#ifdef _WIN32
+#include <share.h>
+#endif
+
 namespace assetcheck {
 namespace {
+// El adaptador distingue fin normal y error del archivo antes de entregarlos
+// a istream. Un EOF de filebuf no garantiza que la lectura fisica haya terminado
+// correctamente en todas las bibliotecas estandar.
+class OrigenArchivo final : public std::streambuf {
+public:
+    explicit OrigenArchivo(const std::filesystem::path& ruta)
+        : archivo_(abrir(ruta), &std::fclose) {}
+
+    OrigenArchivo(const OrigenArchivo&) = delete;
+    OrigenArchivo& operator=(const OrigenArchivo&) = delete;
+    OrigenArchivo(OrigenArchivo&&) = delete;
+    OrigenArchivo& operator=(OrigenArchivo&&) = delete;
+
+    bool abierto() const noexcept {
+        return archivo_ != nullptr;
+    }
+
+protected:
+    int_type underflow() override {
+        const auto leidos = std::fread(bytes_.data(), 1, bytes_.size(),
+                                      archivo_.get());
+        // Una lectura corta puede contener bytes anteriores al error.
+        // No publicarlos como si el origen hubiera terminado normalmente.
+        if (std::ferror(archivo_.get())) {
+            throw std::ios_base::failure("Error al leer el manifiesto");
+        }
+        if (leidos == 0) {
+            return traits_type::eof();
+        }
+        setg(bytes_.data(), bytes_.data(), bytes_.data() + leidos);
+        return traits_type::to_int_type(*gptr());
+    }
+
+private:
+    static std::FILE* abrir(const std::filesystem::path& ruta) {
+#ifdef _WIN32
+        // Conservar rutas Unicode y la lectura compartida del adaptador previo.
+        return _wfsopen(ruta.c_str(), L"rb", _SH_DENYNO);
+#else
+        return std::fopen(ruta.c_str(), "rb");
+#endif
+    }
+
+    std::unique_ptr<std::FILE, decltype(&std::fclose)> archivo_;
+    std::array<char, 4096> bytes_{};
+};
+
 const char* nombre_causa(Resultado resultado) {
     switch (resultado) {
         case Resultado::aceptado: return "ACEPTADO";
@@ -98,11 +153,12 @@ bool revisar_flujo(std::istream& origen, Lote& destino, ErrorGlobal& error) {
 
 bool revisar_archivo(const std::filesystem::path& ruta, Lote& destino,
                      ErrorGlobal& error) {
-    std::ifstream archivo(ruta, std::ios::binary);
-    if (!archivo.is_open()) {
+    OrigenArchivo buffer(ruta);
+    if (!buffer.abierto()) {
         error = ErrorGlobal::apertura;
         return false;
     }
+    std::istream archivo(&buffer);
     return revisar_flujo(archivo, destino, error);
 }
 

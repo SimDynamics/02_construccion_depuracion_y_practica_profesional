@@ -29,14 +29,15 @@ El lote guarda admisiones y rechazos por separado, en su orden de llegada. La bi
 - `AssetCheck/docs/variacion_lector.md`: expectativas, resultado observado y receta de captura del ensayo parcial del autor.
 - [AssetCheck/docs/contrato_tipos.md](AssetCheck/docs/contrato_tipos.md): decisiones, formatos, expectativas y límites del informe por tipos, con sus dos comprobaciones específicas.
 - `AssetCheck/pruebas/manifiesto_casos.cpp`: comprobador del manifiesto, con archivos de prueba propios.
-- `AssetCheck/pruebas/cliente_casos.cmake`: guion de 22 procesos del cliente original, con comparación de código y ambos canales.
+- `AssetCheck/pruebas/cliente_casos.cmake`: guion de 24 procesos del cliente original, con comparación de código y ambos canales.
 - `AssetCheck/pruebas/estadisticas_casos.cpp`: comprobador de 40 comparaciones de estadísticas y preparación del lote.
-- `AssetCheck/pruebas/comprobar_tipos_cli.cmake`: guion de nueve procesos del segundo cliente, con comparación de código y ambos canales.
-- `AssetCheck/CMakeLists.txt`: cuatro bibliotecas, seis programas y seis pruebas CTest: cuatro comprobadores C++ y dos guiones de procesos.
+- `AssetCheck/pruebas/comprobar_tipos_cli.cmake`: guion de once procesos del segundo cliente, con comparación de código y ambos canales.
+- `AssetCheck/pruebas/lectura_windows.cpp`: prueba de error real de lectura mediante un rango bloqueado en un archivo temporal, sin alterar los clientes.
+- `AssetCheck/CMakeLists.txt`: conserva las cuatro bibliotecas, los dos clientes y los cuatro comprobadores; en Windows añade el comprobador de lectura y registra ocho pruebas CTest.
 - `.gitattributes`: reglas que conservan los finales de línea de las tres muestras al usar Git.
-- `.github/workflows/assetcheck-windows.yml`: compila con MSVC y ejecuta las seis suites en Windows Server 2022, sin reemplazar una prueba manual del estudiante.
+- `.github/workflows/assetcheck-windows.yml`: identifica MSVC x64, CMake y Ninja, construye el proyecto y ejecuta las ocho pruebas en Windows Server 2022, sin reemplazar una prueba manual del estudiante.
 
-La ampliación por tipos usa la biblioteca estática `assetcheck_estadisticas` y el segundo cliente `assetcheck_tipos`, que enlaza también con la biblioteca del manifiesto. El cliente original se conserva. La construcción completa incluye cuatro bibliotecas y seis programas: los dos clientes y los cuatro comprobadores. CTest registra esos cuatro comprobadores y los dos guiones de procesos; sus seis pruebas no equivalen a seis casos individuales.
+La ampliación por tipos usa la biblioteca estática `assetcheck_estadisticas` y el segundo cliente `assetcheck_tipos`, que enlaza también con la biblioteca del manifiesto. El cliente original se conserva. La construcción conserva cuatro bibliotecas y seis programas: los dos clientes y los cuatro comprobadores. En Windows añade `comprobar_lectura_windows`, que prueba cada cliente como proceso independiente. CTest registra las seis pruebas anteriores y dos de lectura real: ocho pruebas en total, que no equivalen a ocho casos individuales.
 
 ## Interfaz de la biblioteca del manifiesto
 
@@ -45,6 +46,8 @@ La ampliación por tipos usa la biblioteca estática `assetcheck_estadisticas` y
 Al retornar `true`, la revisión está completa, `error` vale `ErrorGlobal::ninguno` y `destino` recibe el lote nuevo, aunque contenga rechazos locales. Un archivo vacío revisado correctamente sustituye el destino por un lote vacío. Al retornar `false`, `error` identifica `apertura`, `lectura` o `limite_lineas` y el destino anterior permanece completo. Conservarlo no permite presentarlo como resultado del intento fallido. La biblioteca no imprime durante la lectura.
 
 El bloque `try` sólo envuelve `origen.get()`. Una `std::bad_alloc` que escape de esa extracción se propaga. Para las demás excepciones, `bad()` activo produce `LECTURA` y retorno `false`; `eof()` verdadero sin `bad()` permite terminar normalmente; sin ninguna de esas dos marcas, se vuelve a lanzar la excepción. Al propagarse no hay retorno booleano y `destino` sigue intacto. Las operaciones sobre el lote candidato quedan fuera de esa captura. El propio `get()` puede convertir una excepción interna en `badbit` según la máscara del flujo: no se promete que toda falta de memoria del origen escape.
+
+`revisar_archivo` utiliza un adaptador privado de `std::streambuf` que abre en binario y comprueba `ferror` después de cada `fread`, incluso cuando la lectura devuelve algunos bytes. Si hay un error, lanza `std::ios_base::failure` desde el origen; `istream` registra `badbit` y `revisar_flujo` devuelve `LECTURA` sin sustituir el lote anterior. Sólo una lectura sin error puede señalar el fin normal. En Windows, `_wfsopen` conserva las rutas Unicode y la lectura compartida; en los demás sistemas se utiliza `fopen`. El archivo se cierra automáticamente al destruir el adaptador. Esta distinción se apoya en el contrato de [fread](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fread?view=msvc-170), que exige consultar `ferror` o `feof` para distinguir un error de un fin de archivo. La interfaz pública, el analizador de líneas y ambos clientes se conservan.
 
 Cuatro funciones auxiliares devuelven datos para que el cliente decida cuándo y dónde presentarlos:
 
@@ -95,7 +98,7 @@ La primera orden configura el proyecto y genera los archivos de construcción:
 - `-G Ninja` selecciona el generador Ninja.
 - `-DCMAKE_BUILD_TYPE=Debug` selecciona la configuración de depuración de este generador.
 
-La segunda orden construye todos los objetivos del proyecto. `--build AssetCheck/build` selecciona el árbol generado y `--verbose` permite consultar las órdenes de compilación y enlace. CMake construye también las dependencias: estadísticas usa lote y registro; ambos clientes necesitan manifiesto, lote y registro, y el segundo usa además estadísticas. Las cuatro bibliotecas son estáticas y no se ejecutan por su cuenta. Cada archivo estático contiene sus propios objetos; las dependencias de enlace se conservan para el consumidor, sin fusionar los otros archivos de biblioteca. Las órdenes siguientes permiten consultar directamente los tres comprobadores iniciales y el guion del primer cliente. La sección de estadísticas explica su ejecución directa. CTest ejecuta las seis pruebas registradas, incluidos ambos guiones; no construye los programas.
+La segunda orden construye todos los objetivos del proyecto. `--build AssetCheck/build` selecciona el árbol generado y `--verbose` permite consultar las órdenes de compilación y enlace. CMake construye también las dependencias: estadísticas usa lote y registro; ambos clientes necesitan manifiesto, lote y registro, y el segundo usa además estadísticas. Las cuatro bibliotecas son estáticas y no se ejecutan por su cuenta. Cada archivo estático contiene sus propios objetos; las dependencias de enlace se conservan para el consumidor, sin fusionar los otros archivos de biblioteca. Las órdenes siguientes permiten consultar directamente los tres comprobadores iniciales y el guion del primer cliente. La sección de estadísticas explica su ejecución directa. CTest ejecuta las ocho pruebas registradas en Windows, incluidos ambos guiones y los dos ensayos de lectura real; no construye los programas.
 
 ## Segundo cliente: informe por tipos
 
@@ -124,7 +127,7 @@ RECHAZO linea=7 causa=FORMATO
 
 Cada fila termina con un salto lógico; para comparar capturas, normaliza únicamente CRLF a LF. El código esperado es 1 por los rechazos locales de esta revisión completa. Una revisión completa sin rechazos devuelve 0. Un error global devuelve 2, deja stdout vacío y escribe sólo su diagnóstico en stderr, sin informe parcial. La cantidad incorrecta de argumentos usa APERTURA y código 2 antes de intentar abrir un archivo, como el cliente original.
 
-Estos resultados son expectativas independientes del contrato, detalladas en [contrato_tipos.md](AssetCheck/docs/contrato_tipos.md). El comprobador de estadísticas y el guion del segundo cliente los contrastan en sus casos declarados. No se atribuye un fallo real LECTURA al ejecutable por comprobar únicamente APERTURA o LIMITE_LINEAS. La referencia y sus resultados no acreditan la variante propia ni el dominio del estudiante.
+Estos resultados son expectativas independientes del contrato, detalladas en [contrato_tipos.md](AssetCheck/docs/contrato_tipos.md). El comprobador de estadísticas y el guion del segundo cliente los contrastan en sus casos declarados. La prueba adicional de LECTURA ejecuta cada cliente sobre un archivo temporal con un rango bloqueado y comprueba sus canales y código por separado. La referencia y sus resultados no acreditan la variante propia ni el dominio del estudiante.
 
 ## Resultados esperados y regresión
 
@@ -169,7 +172,7 @@ Sin un argumento de directorio, el comprobador utiliza su carpeta de trabajo act
 
 ### Guion que comprueba el cliente como proceso
 
-`cliente_casos.cmake` inicia **22 procesos del cliente**. Cada caso fija de forma independiente tres resultados esperados: su código de terminación, todo stdout y todo stderr. Un caso con diferencias en varios de esos resultados cuenta como un solo caso fallido. Las expectativas se escriben a partir del contrato; no se obtienen llamando al lector ni copiando la salida que se acaba de producir.
+`cliente_casos.cmake` inicia **24 procesos del cliente**: conserva los 22 anteriores y añade las dos entradas de fronteras de U4L6/U4L7. Cada caso fija de forma independiente tres resultados esperados: su código de terminación, todo stdout y todo stderr. Un caso con diferencias en varios de esos resultados cuenta como un solo caso fallido. Las expectativas se escriben a partir del contrato; no se obtienen llamando al lector ni copiando la salida que se acaba de producir.
 
 La orden manual de la receta se ejecuta desde la raíz del repositorio. En CMD, `%CD%` se sustituye por esa carpeta actual:
 
@@ -191,6 +194,8 @@ Dentro del hijo nuevo prepara sus propios manifiestos con `WriteAllBytes` de Pow
 - NUL, byte 127 y CTRL-Z en una línea, seguidos de otra válida que debe conservarse. CTRL-Z no debe terminar antes de tiempo la lectura binaria.
 - Ochenta bytes con CRLF, los rechazos de CRCRLF, CRXLF y 81 bytes, siempre con una segunda línea válida; terminadores mezclados y una línea vacía intermedia.
 - Cien líneas vacías con sus cien rechazos locales; una línea 101 con o sin LF que impide publicar resultados parciales.
+- `fronteras.dat`: una admisión seguida de rechazos que distinguen la precedencia FORMATO, ID, TIPO y TAMANO, y una declaración válida seguida de CR aislado al EOF.
+- `limite_prefijo.dat`: dos admisiones antes de alcanzar 101 líneas; stdout vacío, sólo el diagnóstico global en stderr y código 2.
 - Ausencia o exceso de argumentos, ruta inexistente y una ruta con espacios.
 
 Cada proceso se inicia sin pasar por una consola intermedia. Sus argumentos se entregan por separado. stdout y stderr se guardan en archivos brutos distintos, con nombres como `04_muestra8.stdout.bin` y `04_muestra8.stderr.bin`. Esos archivos quedan conservados dentro de la carpeta de la ejecución para revisar una discrepancia.
@@ -201,22 +206,47 @@ Los mensajes `PREPARACION` identifican las operaciones de reserva y escritura y,
 
 ```text
 -- DirectorioPruebas=<ruta del hijo nuevo cliente_casos_N>
--- CasosCLI=22 Fallos=0
+-- CasosCLI=24 Fallos=0
 ```
 
-El **guion** devuelve 0 cuando coinciden los 22 procesos. Un error de preparación, de CMake o una discrepancia hace terminar el guion con un valor distinto de cero; sus errores controlados usan `FATAL_ERROR` y código 1. Los textos `PREPARACION` y `COMPARACION` permiten distinguir sus causas. Son códigos distintos de los del **cliente** observado: 0 para revisión sin rechazos, 1 para revisión completa con rechazos locales y 2 para error global o cantidad incorrecta de argumentos. Obtener el 1 o el 2 esperado del cliente hace pasar ese caso; no significa que haya fallado el guion.
+El **guion** devuelve 0 cuando coinciden los 24 procesos. Un error de preparación, de CMake o una discrepancia hace terminar el guion con un valor distinto de cero; sus errores controlados usan `FATAL_ERROR` y código 1. Los textos `PREPARACION` y `COMPARACION` permiten distinguir sus causas. Son códigos distintos de los del **cliente** observado: 0 para revisión sin rechazos, 1 para revisión completa con rechazos locales y 2 para error global o cantidad incorrecta de argumentos. Obtener el 1 o el 2 esperado del cliente hace pasar ese caso; no significa que haya fallado el guion.
 
-Estos ensayos acreditan `APERTURA` y `LIMITE_LINEAS` del ejecutable, pero **no provocan ni acreditan un fallo real de lectura del archivo en el proceso del cliente**. La biblioteca comprueba `LECTURA` mediante un origen controlado que falla tras un prefijo; esa prueba no se presenta como ejecución de un dispositivo o disco que falle. No se alteran servicios, red, perfiles ni permisos para fingir ese fallo.
+Estos 24 escenarios acreditan `APERTURA` y `LIMITE_LINEAS` del ejecutable. La prueba adicional `comprobar_lectura_cliente` provoca y comprueba `LECTURA` en el proceso real mediante un rango bloqueado de un archivo temporal. Se conserva además la prueba de biblioteca con un origen controlado. El bloqueo es un fallo de acceso durante la lectura; no representa una avería física del disco.
 
 Durante la primera validación CI en Windows, la batería antigua `cliente_casos.cmake` no pudo crear `nul.txt`: Windows interpreta `NUL` como un nombre reservado de dispositivo, incluso con extensión. Se corrigió solamente el nombre del archivo temporal a `nulo_interno.txt`, sin cambiar el byte NUL contenido en la prueba ni sus expectativas. Tras repetir la validación, las seis suites pasaron. Este fallo fue real en la preparación de pruebas, no un error deliberado del lector ni una modificación del cliente.
 
-### Ejecutar las seis pruebas con CTest
+### Ejecutar las ocho pruebas Windows con CTest
 
-La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. Ejecuta los cuatro comprobadores y los dos guiones de procesos. `--output-on-failure` muestra la salida de una prueba si falla; `--no-tests=error` impide aceptar como éxito un árbol sin pruebas. Debe terminar con código cero y mostrar seis pruebas superadas. Las 28, 31, 56 y 40 comprobaciones internas y los 22 y nueve procesos de los guiones pertenecen a esas seis pruebas; no se registran individualmente en CTest.
+La orden de CTest usa `--test-dir AssetCheck/build` para localizar el árbol configurado. Ejecuta los cuatro comprobadores, los dos guiones de procesos y dos pruebas de error real de lectura, una por cliente. `--output-on-failure` muestra la salida de una prueba si falla; `--no-tests=error` impide aceptar como éxito un árbol sin pruebas. En Windows debe terminar con código cero y mostrar ocho pruebas superadas. Se conservan las 28, 31, 56 y 40 comprobaciones internas y los 24 y once procesos de los guiones. Los dos ensayos de lectura añaden tres procesos por cliente: control normal, archivo bloqueado y recuperación tras desbloquear. Son 41 ejecuciones de clientes entre ambas clases de prueba; no se registran individualmente en CTest.
 
-Al registrar `comprobar_cliente`, CMake resuelve `$<TARGET_FILE:assetcheck>` a la ruta del cliente y la entrega a `-DCLIENTE`; también pasa el directorio binario a `-DRAIZ_PRUEBAS`. Esa expresión se resuelve al generar el proyecto, no dentro del guion ejecutado con `-P`. CTest no construye el programa: la construcción de la receta debe haber terminado correctamente. Como el guion manual ya reservó una carpeta, CTest conserva esa carpeta y reserva otra para sus 22 procesos.
+Al registrar `comprobar_cliente`, CMake resuelve `$<TARGET_FILE:assetcheck>` a la ruta del cliente y la entrega a `-DCLIENTE`; también pasa el directorio binario a `-DRAIZ_PRUEBAS`. Esa expresión se resuelve al generar el proyecto, no dentro del guion ejecutado con `-P`. CTest no construye el programa: la construcción de la receta debe haber terminado correctamente. Como el guion manual ya reservó una carpeta, CTest conserva esa carpeta y reserva otra para sus 24 procesos.
 
-Tras cambiar el programa, volver a ejecutar las seis pruebas permite detectar si se pierde un comportamiento ya ensayado. Su alcance queda limitado a los datos y condiciones declarados: registro y lote en memoria, lectura del manifiesto, errores globales, preparación de cadenas, estadísticas y los 22 y nueve escenarios de los clientes. La muestra siguiente permite observar además el cliente original directamente; la variante propia del estudiante requiere sus propias decisiones y pruebas.
+Tras cambiar el programa, volver a ejecutar las ocho pruebas Windows permite detectar si se pierde un comportamiento ya ensayado. Su alcance queda limitado a los datos y condiciones declarados: registro y lote en memoria, lectura del manifiesto, errores globales, preparación de cadenas, estadísticas y los 24 y once escenarios de los clientes. La muestra siguiente permite observar además el cliente original directamente; la variante propia del estudiante requiere sus propias decisiones y pruebas.
+
+### Error real de lectura en ambos procesos
+
+`comprobar_lectura_windows` crea un directorio nuevo dentro del árbol de pruebas y escribe un manifiesto binario: 64 líneas válidas de 64 bytes cada una forman un prefijo de 4096 bytes; detrás hay una última admisión. Los identificadores son distintos y el archivo completo tiene 65 líneas, por debajo del límite de cien. El control desbloqueado debe aceptar las 65 admisiones.
+
+La prueba bloquea exclusivamente el tramo posterior al prefijo mediante `LockFileEx`. Otro handle comprueba que puede abrir el archivo, leer exactamente el prefijo y obtener `ERROR_LOCK_VIOLATION` al intentar leer el tramo bloqueado. Así se distingue la apertura correcta del fallo posterior. El proceso cliente se ejecuta mientras continúa ese bloqueo y debe producir exactamente:
+
+```text
+stdout: vacío
+stderr: ERROR causa=LECTURA, seguido de CRLF
+código: 2
+```
+
+No debe aparecer ninguna admisión, rechazo local ni resumen parcial. Una llamada adicional a la biblioteca comprueba que un lote anterior permanece intacto. Después de desbloquear, el mismo cliente debe volver a aceptar las 65 líneas. Las expectativas de los dos informes se construyen a partir de los datos de prueba, sin utilizar las funciones del programa para calcularlas.
+
+Las capturas de stdout y stderr se guardan como bytes en archivos distintos de la carpeta nueva. La prueba inicia únicamente el ejecutable recibido, hereda sólo sus tres handles estándar y limita cada ejecución a 30 segundos. Un timeout hace fallar la prueba y termina únicamente ese proceso de prueba. El bloqueo se retira y los handles se cierran mediante RAII; las muestras publicadas no se modifican. [LockFileEx](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-lockfileex) documenta que un bloqueo exclusivo impide leer el rango desde otros handles.
+
+Desde CMD x64 de desarrollo, en la raíz del repositorio y después de construir:
+
+```cmd
+ctest --test-dir AssetCheck/build -C Debug -R "^comprobar_lectura_(cliente|tipos)$" --verbose --no-tests=error
+echo CodigoLectura=%ERRORLEVEL%
+```
+
+`-R` selecciona las dos pruebas de lectura; `--verbose` muestra los controles y las tres ejecuciones de cada cliente; `--no-tests=error` exige que la selección contenga pruebas. El resultado esperado es dos pruebas superadas y código cero. La regresión automatizada acredita este error de lectura controlado en Windows, no un disco averiado ni una instalación inicial del equipo del estudiante.
 
 ## Ejecutar el cliente con la muestra
 
@@ -298,11 +328,11 @@ La construcción selecciona sólo el nuevo comprobador y sus dependencias. La ej
 La batería incluye vacío, duplicados, rechazos anteriores a una admisión, diferencias de mayúsculas, sólo rechazos, cien admisiones de 30000 bytes, una consulta repetida y un vacío posterior. No ejecuta el segundo cliente, no abre manifiestos y no añade automatización CI. La referencia y sus pruebas no acreditan la autoría ni el dominio del estudiante.
 
 
-## Nueve pruebas de proceso del segundo cliente
+## Once pruebas de proceso del segundo cliente
 
-`AssetCheck/pruebas/comprobar_tipos_cli.cmake` registra una prueba CTest para nueve procesos de `assetcheck_tipos`. El proyecto mantiene cuatro bibliotecas, seis programas y seis pruebas CTest: cuatro comprobadores C++ y dos guiones de procesos. No se añade un ejecutable llamado comprobar_tipos_cli.
+`AssetCheck/pruebas/comprobar_tipos_cli.cmake` registra una prueba CTest para once procesos de `assetcheck_tipos`. El proyecto conserva las cuatro bibliotecas, los dos clientes y los cuatro comprobadores; en Windows añade el comprobador de lectura real y alcanza ocho pruebas CTest. No se añade un ejecutable llamado comprobar_tipos_cli.
 
-El guion inicia nueve procesos de assetcheck_tipos y compara de forma independiente cada código, todo stdout y todo stderr: muestra publicada, vacío, una admisión sin terminador final, duplicado, tamaño cero, línea 101, ausencia de argumentos, argumento adicional y ruta inexistente. Las expectativas son literales del contrato y no se calculan con las funciones comprobadas. El guion se detiene en la primera discrepancia; sólo tras completar los nueve casos escribe `CasosCLI=9; directorio=...` y devuelve 0.
+El guion conserva los nueve procesos anteriores de assetcheck_tipos: muestra publicada, vacío, una admisión sin terminador final, duplicado, tamaño cero, línea 101, ausencia de argumentos, argumento adicional y ruta inexistente. Añade `fronteras.dat` y `limite_prefijo.dat`, con los mismos bytes de U4L6/U4L7 usados por el cliente original. En fronteras, sólo se cuenta Faro: una textura, ninguna malla ni sonido y cinco bytes, con cinco rechazos y código 1. Al superar el límite tras dos admisiones, stdout debe estar vacío, stderr contiene sólo el diagnóstico global y el código es 2. Cada proceso compara de forma independiente código, todo stdout y todo stderr. Las expectativas son literales del contrato y no se calculan con las funciones comprobadas. El guion se detiene en la primera discrepancia; sólo tras completar los once casos escribe `CasosCLI=11; directorio=...` y devuelve 0.
 
 Desde CMD x64 de desarrollo y la raíz del repositorio, ejecuta cada orden por separado:
 
@@ -319,11 +349,11 @@ echo CodigoCTest=%ERRORLEVEL%
 
 CLIENTE recibe un ejecutable ya construido y DIR el directorio padre de datos y capturas. Los dos parámetros aparecen antes de -P. CMake resuelve `$<TARGET_FILE:assetcheck_tipos>` al generar el proyecto y CTest recibe la ruta generada; el guion no evalúa esa expresión por sí mismo. Las órdenes deben terminar con 0, aunque algunos procesos observados deban devolver 1 o 2 según su caso.
 
-Cada ejecución reserva un hijo numerado nuevo de DIR bajo un bloqueo consultivo del propio guion; conserva el archivo de control y todas las carpetas anteriores. Dentro prepara sus datos y captura stdout/stderr como archivos brutos distintos. La muestra de 131 bytes se lee desde muestras/variante.txt y se protege con su SHA; no se reescribe. Los demás datos usan líneas de texto válidas con LF o CRLF, sin prometer una representación binaria idéntica entre plataformas.
+Cada ejecución reserva un hijo numerado nuevo de DIR bajo un bloqueo consultivo del propio guion; conserva el archivo de control y todas las carpetas anteriores. Dentro prepara sus datos y captura stdout/stderr como archivos brutos distintos. La muestra de 131 bytes se lee desde muestras/variante.txt y se protege con su SHA; no se reescribe. Los datos de los nueve escenarios anteriores usan líneas de texto válidas con LF o CRLF, sin prometer una representación binaria idéntica entre plataformas. Las dos entradas nuevas se escriben con `WriteAllBytes` de Windows PowerShell 5.1 y se comprueban en HEX y SHA-256 antes de ejecutar el cliente: `fronteras.dat` conserva 93 bytes y la huella `3710009967d4da88e53968a83ba2b19ed37cb23107f002ce1b83659185e3bb99`; `limite_prefijo.dat` conserva 127 bytes y la huella `a23343a769698e610bf50ac77c2ab6d4e6516d5f4c4298af6858f86e18439e9b`. El CR final de fronteras permanece como contenido y debe provocar FORMATO; no se convierte en CRLF.
 
 La comparación lee HEX y recorre parejas completas para convertir sólo CRLF a LF. Conserva CR sueltos, NUL, espacios y salto final. La lectura del guion publicado encontró que reemplazar 0d0a sin alinear podía cambiar otros bytes: 20d0a0 se convertía en 20a0. Se reutilizó el helper por bytes de la primera CLI. Esto corrige la conservación y el diagnóstico de bytes; no se afirma que aquel ejemplo hiciera pasar un esperado ASCII incorrecto.
 
-Los mensajes PREPARACION indican que no pudo prepararse o completarse el ensayo; COMPARACION señala una diferencia de código o canales. El guion devuelve 0 sólo tras los nueve casos; sus fallos controlados terminan con un valor distinto de 0. Es distinto del código 0/1/2 de cada cliente. Esta batería acredita APERTURA y LIMITE_LINEAS en el ejecutable, pero no provoca ni acredita una LECTURA real del archivo. Las capturas y la variante propia del estudiante conservan su alcance independiente.
+Los mensajes PREPARACION indican que no pudo prepararse o completarse el ensayo; COMPARACION señala una diferencia de código o canales. El guion devuelve 0 sólo tras los once casos; sus fallos controlados terminan con un valor distinto de 0. Es distinto del código 0/1/2 de cada cliente. Estos once escenarios acreditan APERTURA y LIMITE_LINEAS en el ejecutable; la prueba adicional `comprobar_lectura_tipos` contrasta LECTURA real con un rango bloqueado. Las capturas y la variante propia del estudiante conservan su alcance independiente.
 
 ## Comprobación automatizada observada
 
