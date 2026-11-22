@@ -41,6 +41,13 @@ int main()
         {"CR interno", "Roca\r malla 240", Resultado::formato, anterior},
         {"DEL", std::string(1, static_cast<char>(127)) + " malla 4", Resultado::formato, anterior},
         {"UTF8", "\xC3\x91 malla 4", Resultado::formato, anterior},
+        // Dos o mas defectos en una linea: devolver la primera causa
+        // segun el orden FORMATO, ID, TIPO, TAMANO, sin tocar destino.
+        {"precedencia formato con campo extra", "7Roca imagen 0 extra", Resultado::formato, anterior},
+        {"precedencia formato con campo ausente", "7Roca imagen", Resultado::formato, anterior},
+        {"precedencia ID sobre tipo y tamano", "_Roca imagen 0", Resultado::id, anterior},
+        {"precedencia tipo sobre tamano", "Roca imagen 0", Resultado::tipo, anterior},
+        {"CR aislado final", "Roca malla 2\r", Resultado::formato, anterior},
         {"ID antes de tipo", "_A material 0", Resultado::id, anterior},
         {"ID empieza con cifra", "7Roca malla 2", Resultado::id, anterior},
         {"ID de 13", "Abc1234567890 malla 2", Resultado::id, anterior},
