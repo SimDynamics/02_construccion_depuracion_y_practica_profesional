@@ -440,6 +440,23 @@ void ejecutar_casos(const fs::path& trabajo) {
 
     // 52-54: region observable y cadenas de ambos canales aun en formato clasico.
     probar_region(informe, admisiones, rechazos);
+
+    // 57: en un mismo lote, la primera causa real prevalece sobre otras
+    // incorrecciones de la linea; los rechazos no reservan IDs ni interrumpen
+    // las admisiones posteriores. El esperado se declara independientemente.
+    const Lote prioridades{{{1, {"Puerta", "malla", 2}}, {6, {"Eco", "sonido", 3}}},
+                           {{2, Resultado::formato, 0}, {3, Resultado::id, 0},
+                            {4, Resultado::tipo, 0}, {5, Resultado::tamano, 0},
+                            {7, Resultado::duplicado, 1}}};
+    probar_flujo("lote mixto respeta FORMATO ID TIPO TAMANO y duplicado",
+        "Puerta malla 2\n"
+        "7Roca imagen 0 extra\n"
+        "_Roca imagen 0\n"
+        "Roca imagen 0\n"
+        "Roca malla 0\n"
+        "Eco sonido 3\n"
+        "Puerta sonido 6",
+        true, ErrorGlobal::ninguno, prioridades);
 }
 } // namespace
 
