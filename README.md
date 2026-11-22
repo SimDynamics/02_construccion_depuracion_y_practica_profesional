@@ -153,7 +153,7 @@ Cada resumen termina con un salto de línea. Los comprobadores de registro y lot
 
 ### Comprobador del manifiesto y sus archivos de prueba
 
-En la ruta normal, `comprobar_manifiesto.exe` realiza **56 comparaciones**. Contrasta el retorno, `ErrorGlobal` y el lote completo, incluidas cantidades, orden, campos y líneas de origen. También compara las cadenas enteras de informe, los diagnósticos y los códigos esperados. Sus entradas incluyen los límites de 80/81 bytes y 100/101 líneas, los terminadores, bytes inválidos, EOF con distintas máscaras, un fallo real de lectura tras un prefijo y una configuración regional artificial. Bajo esa configuración, también comprueba que `30000` siga siendo un tamaño válido y que `1_2` sea rechazado como `TAMANO`: el separador regional artificial no forma parte de los dígitos admitidos. Las expectativas se declaran independientemente del lector y de los serializadores.
+En la ruta normal, `comprobar_manifiesto.exe` realiza **57 comparaciones**. Contrasta el retorno, `ErrorGlobal` y el lote completo, incluidas cantidades, orden, campos y líneas de origen. También compara las cadenas enteras de informe, los diagnósticos y los códigos esperados. Sus entradas incluyen los límites de 80/81 bytes y 100/101 líneas, los terminadores, bytes inválidos, EOF con distintas máscaras, un fallo real de lectura tras un prefijo y una configuración regional artificial. Bajo esa configuración, también comprueba que `30000` siga siendo un tamaño válido y que `1_2` sea rechazado como `TAMANO`: el separador regional artificial no forma parte de los dígitos admitidos. También comprueba en un mismo lote la prioridad `FORMATO → ID → TIPO → TAMANO`, la detección posterior de duplicados y la continuidad de las admisiones, contrastando el lote completo con expectativas independientes. Las expectativas se declaran independientemente del lector y de los serializadores.
 
 La ejecución directa de la receta pasa `"AssetCheck\build"` como directorio padre. Debe existir. El comprobador reserva allí un hijo nuevo, con un nombre como `manifiesto_casos_1`. Si ese directorio ya existe, lo conserva y prueba el siguiente número; no borra ni reutiliza los archivos de ejecuciones anteriores. Escribe únicamente sus archivos nuevos dentro de la carpeta reservada y comprueba los resultados de creación, escritura y cierre.
 
@@ -161,10 +161,10 @@ La salida normal contiene dos líneas:
 
 ```text
 DirectorioPruebas=<ruta del directorio nuevo>
-Comprobaciones=56 Fallos=0
+Comprobaciones=57 Fallos=0
 ```
 
-La primera línea muestra la ruta real elegida: el directorio padre y el número disponible cambian entre equipos o ejecuciones. Los marcadores entre `<` y `>` de este ejemplo no se escriben literalmente. La segunda línea es el resumen esperado cuando pasan las 56 comparaciones. Ambas terminan con salto de línea.
+La primera línea muestra la ruta real elegida: el directorio padre y el número disponible cambian entre equipos o ejecuciones. Los marcadores entre `<` y `>` de este ejemplo no se escriben literalmente. La segunda línea es el resumen esperado cuando pasan las 57 comparaciones. Ambas terminan con salto de línea.
 
 Para este comprobador, el código **0** indica comparaciones correctas y stderr vacío. El código **1** indica al menos una discrepancia, cuyos datos esperados y obtenidos aparecen en stderr. El código **2** indica uso incorrecto o un problema que impide completar la preparación o ejecución del comprobador, por ejemplo no poder escribir o cerrar su archivo. Las carpetas ya creadas se conservan también al fallar.
 
