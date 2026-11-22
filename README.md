@@ -136,10 +136,10 @@ Los cuatro comprobadores utilizan datos y expectativas declarados en su código,
 `comprobar_registro.exe` debe escribir:
 
 ```text
-Casos=28 Fallos=0
+Casos=33 Fallos=0
 ```
 
-Esa batería conserva veintisiete casos individuales y una secuencia de tres llamadas sobre el mismo destino, contada como otro caso. Volver a ejecutarla comprueba que la ampliación del proyecto conserva los comportamientos ensayados de la primera etapa.
+Esa batería conserva los veintisiete casos individuales anteriores, cinco casos adicionales sobre la prioridad de FORMATO, ID y TIPO cuando una entrada presenta varios defectos o un CR final, y una secuencia de tres llamadas sobre el mismo destino, contada como otro caso. En todos los rechazos se conserva exactamente el registro de destino anterior. Volver a ejecutarla comprueba que la ampliación del proyecto conserva los comportamientos ensayados de la primera etapa.
 
 `comprobar_lote.exe` debe escribir:
 
