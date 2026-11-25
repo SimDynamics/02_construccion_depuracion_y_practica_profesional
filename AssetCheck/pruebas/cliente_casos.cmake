@@ -327,5 +327,6 @@ endif()
 if(FALLOS GREATER 0)
     message(FATAL_ERROR "COMPARACION: ${FALLOS} de ${CASOS} casos no coinciden.")
 endif()
-# No se provoca LECTURA real del ejecutable: un fallo de disco no es portable.
-# La biblioteca ya prueba LECTURA mediante un streambuf que falla tras prefijo.
+# Este guion no provoca LECTURA. CTest registra aparte comprobar_lectura_cliente,
+# que prueba el proceso real mediante un rango bloqueado tras un prefijo valido.
+# La prueba de biblioteca con streambuf se conserva; ninguna simula un disco averiado.

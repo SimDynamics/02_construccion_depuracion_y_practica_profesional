@@ -41,4 +41,23 @@ jobs:
           cmake --build AssetCheck/build --parallel 2
           if errorlevel 1 exit /b 1
       - name: Ejecutar las regresiones CTest y conservar sus observaciones
-        run: ctest --test-dir AssetCheck/build -C Debug --verbose --output-on-failure
+        shell: pwsh
+        run: ctest --test-dir AssetCheck/build -C Debug --verbose --output-on-failure --no-tests=error --output-junit "$env:GITHUB_WORKSPACE/AssetCheck/build/ctest-results.xml"
+      - name: Publicar capturas brutas y resultados de CTest
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: assetcheck-evidencia-windows-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            AssetCheck/build/ctest-results.xml
+            AssetCheck/build/Testing/Temporary/LastTest.log
+            AssetCheck/build/cliente_casos_*/*.bin
+            AssetCheck/build/cliente_casos_*/*.txt
+            AssetCheck/build/cliente_casos_*/*.dat
+            AssetCheck/build/comprobar_tipos_cli_*/*.bin
+            AssetCheck/build/comprobar_tipos_cli_*/*.txt
+            AssetCheck/build/comprobar_tipos_cli_*/*.dat
+            AssetCheck/build/assetcheck_lectura_*/*.bin
+            AssetCheck/build/assetcheck_lectura_*/*.txt
